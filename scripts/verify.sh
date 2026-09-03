@@ -60,5 +60,5 @@ fi
 
 echo ""
 echo "App:    http://localhost   (admin / admin123)"
-echo "ArgoCD: http://localhost:30080"
+echo "ArgoCD: kubectl -n argocd port-forward svc/argocd-server 8080:443  ->  https://localhost:8080"
 echo ""

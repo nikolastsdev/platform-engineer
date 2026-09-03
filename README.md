@@ -100,13 +100,22 @@ make verify
 
 | Serviço | URL |
 |---------|-----|
-| Aplicação Flask | `http://localhost` |
-| ArgoCD UI | `http://localhost:30080` |
+| Aplicação Flask | `http://localhost` (hostPort do ingress-nginx no control-plane) |
 | App API (healthz) | `http://localhost/healthz` |
+| ArgoCD UI | via port-forward (kind não expõe NodePort no host) |
 
 **Credenciais padrão (local):**
 - App: `admin` / `admin123`
 - ArgoCD: `admin` / `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d`
+
+> O ArgoCD roda como `NodePort` (`80:30080`), mas o Kind não expõe NodePorts
+> diretamente no host. Para abrir a UI:
+
+```bash
+make up                          # provisiona tudo
+kubectl -n argocd port-forward svc/argocd-server 8080:443
+# acesse https://localhost:8080  (aceite o certificado self-signed)
+```
 
 ## Pipeline CI/CD (GitHub Actions)
 
@@ -141,7 +150,8 @@ make setup-runner
 
 ```
 ├── terraform/                 # IaC — provisionamento via `make up`
-│   ├── providers.tf           # Kind + Kubernetes + Helm + Docker
+│   ├── providers.tf           # Providers: kubernetes + helm + docker
+│   ├── kind-config.yaml       # Config do cluster kind (mirror containerd + portas)
 │   ├── main.tf                # Registry + Ingress + Metrics + ArgoCD
 │   ├── variables.tf
 │   └── outputs.tf
