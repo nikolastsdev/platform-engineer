@@ -21,19 +21,19 @@ resource "docker_container" "registry" {
     internal = 5000
     external = var.registry_port
   }
-
-  provisioner "local-exec" {
-    command = "docker network connect kind ${var.registry_name} 2>/dev/null || true"
-  }
 }
 
-# Configura o cluster para considerar o registry local como inseguro/insecure
+# Conecta o registry à rede kind e cria o configmap de descoberta do registry
 resource "null_resource" "registry_config" {
   count      = var.enable_registry ? 1 : 0
-  depends_on = [docker_container.registry, kind_cluster.this, null_resource.kubeconfig]
+  depends_on = [docker_container.registry]
 
   provisioner "local-exec" {
     command = <<-EOT
+      # Conecta o registry à rede kind (rede só existe após o cluster);
+      # idempotente — falha silenciosamente se já conectado.
+      docker network connect kind ${var.registry_name} 2>/dev/null || true
+
       KUBECONFIG=~/.kube/kind-${var.cluster_name}.conf kubectl create namespace kube-public --dry-run=client -o yaml | KUBECONFIG=~/.kube/kind-${var.cluster_name}.conf kubectl apply -f -
       KUBECONFIG=~/.kube/kind-${var.cluster_name}.conf kubectl -n kube-public create configmap local-registry-hosting \
         --from-literal=host=${local.registry_url} \
@@ -69,22 +69,41 @@ resource "helm_release" "nginx_ingress" {
 
   set {
     name  = "controller.replicaCount"
-    value = "2"
+    value = "1"
   }
   set {
     name  = "controller.service.type"
     value = "NodePort"
   }
   set {
-    name  = "controller.service.nodePorts.http"
-    value = "30080"
+    name  = "controller.hostPort.enabled"
+    value = "true"
   }
   set {
     name  = "controller.publishService.enabled"
     value = "true"
   }
 
-  depends_on = [kind_cluster.this, null_resource.kubeconfig, null_resource.registry_config]
+  # Força o controller para o control-plane: é o único node do kind com as
+  # portas 80/443 expostas ao host (ver terraform/kind-config.yaml), portanto
+  # `http://localhost` acessa o app direto.
+  values = [<<-EOF
+controller:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+EOF
+  ]
+
+  depends_on = [null_resource.registry_config]
 }
 
 # ------------------------------------------------------------------------------
@@ -127,6 +146,10 @@ resource "helm_release" "argocd" {
   set {
     name  = "server.service.type"
     value = "NodePort"
+  }
+  set {
+    name  = "server.service.nodePorts.https"
+    value = "30080"
   }
 
   depends_on = [helm_release.nginx_ingress]

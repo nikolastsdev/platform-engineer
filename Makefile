@@ -27,7 +27,12 @@ plan: init ## terraform plan
 apply: init ## terraform apply -auto-approve
 	$(TERRAFORM) -chdir=$(TF_DIR) apply -auto-approve
 
-up: apply ## Provisiona registry + cluster kind + ingress + metrics + ArgoCD (+ GitOps app)
+cluster: ## Cria o cluster kind (se não existir) + kubeconfig local
+	@kind get clusters 2>/dev/null | grep -q "$(CLUSTER_NAME)" || kind create cluster --config terraform/kind-config.yaml
+	@kind get kubeconfig --name "$(CLUSTER_NAME)" > "$(KUBECONFIG)"
+	@chmod 600 "$(KUBECONFIG)"
+
+up: cluster apply ## Cria cluster kind + provisiona registry + ingress + metrics + ArgoCD (+ GitOps app)
 	@echo ""
 	@echo "==> Infraestrutura aplicada."
 	@echo "    App:    http://localhost"
@@ -35,10 +40,11 @@ up: apply ## Provisiona registry + cluster kind + ingress + metrics + ArgoCD (+ 
 	@echo "    kubeconfig: $(KUBECONFIG)"
 	$(TERRAFORM) -chdir=$(TF_DIR) output
 
-destroy: ## terraform destroy (remove cluster + registry + deps)
+down: ## Remove tudo: terraform destroy + cluster kind
 	-$(TERRAFORM) -chdir=$(TF_DIR) destroy -auto-approve
+	@kind delete cluster --name "$(CLUSTER_NAME)" 2>/dev/null || true
 
-down: destroy ## Alias para destroy
+destroy: down ## Alias para down
 
 verify: ## Verifica a saúde do ambiente
 	./scripts/verify.sh

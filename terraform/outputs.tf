@@ -1,6 +1,6 @@
 output "cluster_name" {
   description = "Nome do cluster kind"
-  value       = kind_cluster.this.name
+  value       = var.cluster_name
 }
 
 output "kubeconfig_path" {
