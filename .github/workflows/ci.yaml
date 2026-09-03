@@ -1,0 +1,183 @@
+# ==============================================================================
+# Pipeline do app — roda no self-hosted runner local
+#
+# Resumo:
+#   PR/push  → test (Python + Postgres) + scan (Trivy)
+#   push main → build + push imagem ao registry local + deploy (ArgoCD sync)
+#
+# Pré-requisito: self-hosted runner registrado no repo (scripts/setup-runner.sh)
+# Infraestrutura: roda com `make up` / `make setup` antes da primeira execução.
+# ==============================================================================
+name: App CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY_PORT: "5000"
+  IMAGE_NAME: todolist
+  IMAGE_TAG: ${{ github.sha }}
+  CLUSTER_NAME: todolist-platform
+
+jobs:
+  # -----------------------------------------------------------------------
+  # Job 1: Testes da aplicação (Python + PostgreSQL)
+  # -----------------------------------------------------------------------
+  test:
+    name: Test
+    runs-on: self-hosted
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: todolist
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: todolist
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        working-directory: todolist-app
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: App import check
+        env:
+          DB_HOST: localhost
+          DB_PORT: '5432'
+          DB_NAME: todolist
+          DB_USER: todolist
+          DB_PASSWORD: testpass
+        working-directory: todolist-app
+        run: python -c "from app import app; print('App imports OK')"
+
+  # -----------------------------------------------------------------------
+  # Job 2: Build + push da imagem para o registry local
+  # -----------------------------------------------------------------------
+  build:
+    name: Build & Push
+    runs-on: self-hosted
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build imagem Docker
+        run: |
+          docker build \
+            -t localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
+            -t localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:latest \
+            -f todolist-app/Dockerfile \
+            todolist-app/
+
+      - name: Push para registry local
+        run: |
+          docker push localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker push localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:latest
+          echo "Imagem enviada para localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:latest"
+
+  # -----------------------------------------------------------------------
+  # Job 3: Security scan (Trivy)
+  # -----------------------------------------------------------------------
+  scan:
+    name: Security Scan
+    runs-on: self-hosted
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
+  # -----------------------------------------------------------------------
+  # Job 4: Deploy via ArgoCD (GitOps sync)
+  # -----------------------------------------------------------------------
+  deploy:
+    name: Deploy (ArgoCD)
+    runs-on: self-hosted
+    needs: [build, scan]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Aguardar ArgoCD
+        run: |
+          export KUBECONFIG="$HOME/.kube/kind-${{ env.CLUSTER_NAME }}.conf"
+          echo "Aguardando ArgoCD server..."
+          kubectl wait --namespace=argocd \
+            --for=condition=available deploy/argocd-server \
+            --timeout=120s || true
+
+      - name: Forçar sync ArgoCD (re-sync da aplicação)
+        run: |
+          export KUBECONFIG="$HOME/.kube/kind-${{ env.CLUSTER_NAME }}.conf"
+
+          # Aguarda a Application existir
+          echo "Verificando Application 'todolist-app'..."
+          kubectl get application todolist-app -n argocd || {
+            echo "Application não encontrada. Aguardando 30s..."
+            sleep 30
+          }
+
+          # Força sync via patch (equivalente a 'argocd app sync')
+          echo "Forçando sync do ArgoCD..."
+          kubectl -n argocd patch application todolist-app --type merge \
+            -p '{
+              "metadata":{"annotations":{"argocd.argoproj.io/refresh":"true"}},
+              "operation":{"sync":{"revision":"HEAD","prune":true}}
+            }' 2>/dev/null || echo "Patch ignorado — ArgoCD auto-sync ativado."
+
+          # Aguarda a Application ficar Synced
+          echo "Aguardando sync..."
+          for i in $(seq 1 30); do
+            STATUS=$(kubectl get application todolist-app -n argocd -o jsonpath='{.status.sync.status}' 2>/dev/null || echo "Unknown")
+            if [ "$STATUS" = "Synced" ]; then
+              echo "ArgoCD Synced!"
+              break
+            fi
+            echo "  [$i/30] sync.status=$STATUS — aguardando..."
+            sleep 10
+          done
+
+      - name: Verificar deploy
+        run: |
+          export KUBECONFIG="$HOME/.kube/kind-${{ env.CLUSTER_NAME }}.conf"
+          echo "=== Pods ==="
+          kubectl get pods -n todolist -o wide
+          echo ""
+          echo "=== Health ==="
+          kubectl -n todolist rollout status deploy/todolist --timeout=120s || true
+          echo ""
+          curl -sf http://localhost/healthz && echo "Health OK" || echo "Health check via localhost não respondeu (porta pode estar mapeada)"

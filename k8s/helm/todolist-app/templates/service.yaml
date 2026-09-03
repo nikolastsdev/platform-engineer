@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "todolist-app.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "todolist-app.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "5000"
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "todolist-app.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

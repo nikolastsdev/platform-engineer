@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "todolist-app.fullname" . }}-cleanup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "todolist-app.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  schedule: {{ .Values.cleanupCronjob.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cleanup
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: {{ include "todolist-app.serviceAccountName" . }}
+          containers:
+            - name: cleanup
+              image: "{{ .Values.cleanupCronjob.image.repository }}:{{ .Values.cleanupCronjob.image.tag }}"
+              command: ["sh", "-c"]
+              args:
+                - |
+                  echo "Cleanup started at $(date)"
+                  TOKEN="${CLEANUP_TOKEN:-}"
+                  if [ -n "$TOKEN" ]; then
+                    curl -sf -X POST \
+                      -H "X-Cleanup-Token: $TOKEN" \
+                      -H "Content-Type: application/json" \
+                      http://{{ include "todolist-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local/cleanup || echo "Cleanup request failed (non-critical)"
+                  else
+                    echo "No CLEANUP_TOKEN configured; skipping cleanup request"
+                  fi
+                  echo "Cleanup finished"
+              env:
+                - name: CLEANUP_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "todolist-app.fullname" . }}-secrets
+                      key: CLEANUP_TOKEN

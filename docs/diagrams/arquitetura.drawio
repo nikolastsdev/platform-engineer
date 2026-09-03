@@ -1,0 +1,72 @@
+<mxfile host="app.diagrams.net" modified="2025-09-03T00:00:00Z" agent="DeepSeek" etag="todolist-arch-v1" version="24.8.8" type="device">
+  <diagram id="todolist-arch" name="To-Be Arquitetura">
+    <mxGraphModel dx="800" dy="600" grid="1" gridUnits="10" guidestyles="[object Object]" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Developer / CI -->
+        <mxCell id="dev" value="&#129302; Desenvolvedor (Git push)" style="rounded=1;fillColor=#e3e8f0;strokeColor=#1e293b;strokeWidth=1;fontColor=#0f172a;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="180" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gh" value="&#128187; GitHub Actions (Build + Trivy + Push)" style="rounded=1;fillColor=#fee2e2;strokeColor=#b91c1c;strokeWidth=1;fontColor=#7f1d1d;" vertex="1" parent="1">
+          <mxGeometry x="240" y="40" width="220" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="reg" value="&#128190; GHCR Registry (ghcr.io)" style="rounded=1;fillColor=#d1fae5;strokeColor=#047857;strokeWidth=1;fontColor=#064e3b;" vertex="1" parent="1">
+          <mxGeometry x="480" y="40" width="200" height="40" as="geometry" />
+        </mxCell>
+        <!-- GitOps -->
+        <mxCell id="flux" value="&#128736; Flux CD (GitOps)" style="rounded=1;fillColor=#fef9c3;strokeColor=#ca8a04;strokeWidth=1;fontColor=#854d0e;" vertex="1" parent="1">
+          <mxGeometry x="480" y="120" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="repo" value="&#128193; Repo Git (Helm Chart + App)" style="rounded=0;fillColor=#e0e7ff;strokeColor=#3730a3;strokeWidth=1;fontColor=#312e81;" vertex="1" parent="1">
+          <mxGeometry x="240" y="120" width="220" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="dev2" value="&#128187; CI Output (Image tag + Chart)" style="rounded=0;fillColor=#f3e8ff;strokeColor=#9333ea;strokeWidth=1;fontColor=#6b21a8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="120" width="180" height="40" as="geometry" />
+        </mxCell>
+        <!-- Kind Cluster -->
+        <mxCell id="kind" value="&#129302; Kind Cluster (v1.30.0)" style="rounded=0;fillColor=#cffafe;strokeColor=#0891b2;strokeWidth=2;fontColor=#155e75;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="60" y="240" width="640" height="240" as="geometry" />
+        </mxCell>
+        <!-- Ingress -->
+        <mxCell id="nginx" value="&#127761; NGINX Ingress Controller (Namespace: ingress-nginx)" style="rounded=1;fillColor=#cffafe;strokeColor=#0891b2;strokeWidth=1;fontColor=#155e75;" vertex="1" parent="1">
+          <mxGeometry x="80" y="260" width="260" height="30" as="geometry" />
+        </mxCell>
+        <!-- Namespace todolist -->
+        <mxCell id="ns_todo" value="&#128196; Namespace: todolist" style="rounded=0;fillColor=#f0fdf4;strokeColor=#16a34a;strokeWidth=2;fontColor=#14532d;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="100" y="300" width="560" height="140" as="geometry" />
+        </mxCell>
+        <!-- Components -->
+        <mxCell id="deploy" value="Deployment: todolist-app\n(3 pods, HPA 2-10, RollingUpdate)" style="rounded=1;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=1;fontColor=#14532d;" vertex="1" parent="1">
+          <mxGeometry x="120" y="320" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="svc" value="Service: todolist (ClusterIP)" style="rounded=1;fillColor=#f0fdf4;strokeColor=#4ade80;strokeWidth=1;fontColor=#14532d;" vertex="1" parent="1">
+          <mxGeometry x="120" y="370" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hpa" value="&#128200; HPA (CPU 70%, Mem 80%)" style="rounded=1;fillColor=#fef3c7;strokeColor=#f59e0b;strokeWidth=1;fontColor=#92400e;" vertex="1" parent="1">
+          <mxGeometry x="340" y="320" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="pdb" value="&#128737; PDB (minAvailable: 1)" style="rounded=1;fillColor=#fee2e2;strokeColor=#ef4444;strokeWidth=1;fontColor=#7f1d1d;" vertex="1" parent="1">
+          <mxGeometry x="340" y="360" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ingress2" value="Ingress (NGINX)\n(host: localhost)" style="rounded=1;fillColor=#cffafe;strokeColor=#0891b2;strokeWidth=1;fontColor=#155e75;" vertex="1" parent="1">
+          <mxGeometry x="120" y="410" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cron" value="CronJob (Cleanup cada 5min)" style="rounded=1;fillColor=#e0e7ff;strokeColor=#6366f1;strokeWidth=1;fontColor=#3730a3;" vertex="1" parent="1">
+          <mxGeometry x="520" y="320" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="secret" value="Secret (DB, Admin, Token)" style="rounded=1;fillColor=#fce7f3;strokeColor=#db2777;strokeWidth=1;fontColor=#831843;" vertex="1" parent="1">
+          <mxGeometry x="520" y="360" width="140" height="30" as="geometry" />
+        </mxCell>
+        <!-- Database namespace -->
+        <mxCell id="db" value="Namespace: todolist-db\nPostgreSQL 15 (StatefulSet)" style="rounded=0;fillColor=#f0fdf4;strokeColor=#16a34a;strokeWidth=2;fontColor=#14532d;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="100" y="450" width="560" height="30" as="geometry" />
+        </mxCell>
+        <!-- Observability -->
+        <mxCell id="obs" value="&#128161; Observability\n(Prometheus + Grafana + Loki)" style="rounded=1;fillColor=#ffedd5;strokeColor=#f97316;strokeWidth=2;fontColor=#7c2d12;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="100" y="500" width="560" height="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

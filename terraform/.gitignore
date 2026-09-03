@@ -1,0 +1,9 @@
+# Terraform state e caches locais (não versionar)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+*.tfvars
+override.tf
+override.tf.json

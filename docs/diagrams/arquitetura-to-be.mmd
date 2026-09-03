@@ -1,0 +1,185 @@
+# Arquitetura To-Be (Estado Ideal)
+
+> **Objetivo:** Representar a arquitetura desejada (target state) com GitOps, observabilidade, segurança e resiliência em produção.
+
+```mermaid
+flowchart TB
+    subgraph "🔵 DESENVOLVEDOR / CI"
+        DEV["💻 Desenvolvedor"]
+        PR["🔀 Pull Request"]
+        MAIN["🏷️ main branch"]
+        CI["⚡ GitHub Actions\nBuild + Test + Scan"]
+        IMG["📦 Imagem OCI\n(ghcr.io/...)"]
+    end
+
+    subgraph "🌐 GITOPS FLOW (Flux CD)"
+        REPO_Helm["📁 Repo: Helm Chart\n(k8s/helm/)"]
+        REPO_App["📁 Repo: todolist-app\n(app source)"]
+        FLUX["⚙️ Flux CD\n(GitRepository + Kustomization)"]
+        IMG_POL["📷 Image Automation\n(ImageRepository + ImagePolicy)"]
+        HELM_REL["🎯 HelmRelease\n(todolist-app)"]
+    end
+
+    subgraph "☸️ KIND CLUSTER (Kubernetes)"
+        subgraph "📦 Infrastructure Layer"
+            NGINX["🌐 NGINX Ingress Controller\n(NodePort 80→8080)"]
+            METRICS["📊 Metrics Server\n(HPA data)"]
+            CERT_MAN["🔒 cert-manager\n(TLS via Let's Encrypt)"]
+        end
+
+        subgraph "📐 todolist namespace"
+            subgraph "App Tier"
+                subgraph "todolist-app (3 pods, HPA 2-10)"
+                    POD1["� Pod-1\nFlask + Gunicorn"]
+                    POD2["� Pod-2\nFlask + Gunicorn"]
+                    POD3["� Pod-N\nFlask + Gunicorn"]
+                end
+                SVC["🎯 Service ClusterIP"]
+                INGRESS["📡 Ingress\n(todolist.local)"]
+                HPA["📈 HPA\n(CPU 70%, Mem 80%)"]
+                PDB["🛡️ PodDisruptionBudget\n(min 1 pod)"]
+                SA["🔑 ServiceAccount\n(Role: list pods, patch cronjob)"]
+            end
+            subgraph "Data Tier"
+                PG["🐘 PostgreSQL 15\n(StatefulSet, 1 replica)"]
+                PG_PVC["💾 PersistentVolumeClaim\n(8Gi, HostPath/local)"]
+            end
+            subgraph "Automation"
+                CRON["⏰ CronJob\n(every 5 min)\ncleanup completed todos"]
+                RBAC["🔐 Role + RoleBinding\n(list pods, get cronjobs)"]
+            end
+            subgraph "Configuration"
+                CM["📋 ConfigMap\n(APP_NAME, APP_COLOR...)"]
+                SEC["🤫 Secret\n(DB credentials, session key)"]
+            end
+        end
+    end
+
+    subgraph "📡 External Access"
+        USER["👤 Usuário\n(navegador)"]
+        HOST["🖥️ Host\nlocalhost:8080"]
+    end
+
+    subgraph "🔍 Observability"
+        PROM["📈 Prometheus\n(metrics)"]
+        GRAF["📊 Grafana\n(dashboards)"]
+        ALERTS["🚨 Alertmanager\n( Slack / PagerDuty )"]
+        LOKI["📝 Loki\n(logs)"]
+    end
+
+    subgraph "🔐 Security"
+        VAULT["🗄️ HashiCorp Vault\n(secrets dinâmicos)"]
+        TRIVY["🔎 Trivy\n(vulnerability scan)"]
+    end
+
+    %% Developer → CI
+    DEV --> PR --> MAIN
+    MAIN --> CI
+    CI --> IMG
+
+    %% CI → Flux
+    IMG --> IMG_POL
+    REPO_Helm --> FLUX
+
+    %% Flux → Cluster
+    FLUX --> HELM_REL
+    IMG_POL -->|image updated| HELM_REL
+
+    %% HelmRelease → Components
+    HELM_REL --> NGINX
+    HELM_REL -->|todolist namespace| POD1
+    HELM_REL --> POD2
+    HELM_REL --> POD3
+    HELM_REL --> PG
+    HELM_REL --> CRON
+    HELM_REL --> CM
+    HELM_REL --> SEC
+    HELM_REL --> SA
+    HELM_REL --> RBAC
+
+    %% App connections
+    POD1 & POD2 & POD3 --> SVC
+    POD1 & POD2 & POD3 --> PG
+    POD1 & POD2 & POD3 --> SEC
+    SVC --> INGRESS
+    INGRESS --> NGINX
+    HPA -.->|scale| POD1
+    HPA -.->|scale| POD2
+    HPA -.->|scale| POD3
+    METRICS -.->|metrics| HPA
+    CRON --> SEC
+
+    %% External access
+    USER -->|http| HOST --> NGINX
+
+    %% Observability
+    POD1 & POD2 & POD3 --> PROM
+    POD1 & POD2 & POD3 --> LOKI
+    PROM --> GRAF
+    PROM --> ALERTS
+
+    %% Security
+    TRIVY -.->|scan| IMG
+    VAULT -.->|inject secrets| SEC
+
+    %% PostgreSQL
+    PG --> PG_PVC
+```
+
+## Legenda
+
+| Símbolo | Significado |
+|---|---|
+| `--> ` | Dependência / comunicação direta |
+| `-.-> ` | Observação / metrics |
+| `subgraph` | Agrupamento lógico (namespace, camada) |
+
+## Fluxo de Deploy (GitOps)
+
+```mermaid
+sequenceDiagram
+    participant DEV as Desenvolvedor
+    participant GH as GitHub
+    participant CI as GitHub Actions
+    participant REG as GHCR Registry
+    participant FLUX as Flux CD
+    participant K8S as Kind Cluster
+
+    DEV->>GH: git push (app change)
+    GH->>CI: webhook (push to main)
+    CI->>CI: Build Dockerfile
+    CI->>CI: Trivy scan
+    CI->>REG: docker push (ghcr.io/...)
+    CI->>GH: commit image tag
+    Note over FLUX: Flux detecta nova imagem
+    FLUX->>K8S: helm upgrade --install
+    K8S->>K8S: RollingUpdate (zero downtime)
+    K8S->>FLUX: rollout complete
+    Note over FLUX: Sincronizado!
+```
+
+## Fluxo de Dados
+
+```mermaid
+flowchart LR
+    subgraph "Request Flow"
+        U["👤 Usuário"] -->|"http://localhost:8080"| NGINX["🌐 NGINX\nIngress"]
+        NGINX -->|"Route /| INGRESS["📡 Ingress"]
+        INGRESS -->|"todolist.local"| SVC["🎯 Service"]
+        SVC -->|"load balance"| POD["� Pod\n(Flask/Gunicorn)"]
+        POD -->|"SQL| POSTGRES["🐘 PostgreSQL\n(todolist-db ns)"]
+    end
+
+    subgraph "Config Flow"
+        CM["📋 ConfigMap"] -->|"env"| POD
+        SEC["🤫 Secret"] -->|"env|DB_PASSWORD"| POD
+        SA["🔑 SA Token"] -->|"mount /var/run/secrets"| POD
+        POD -->|"Kubernetes API| K8SAPI["☸️ K8s API\n(list pods, patch cronjob)"]
+    end
+
+    subgraph "Metrics Flow"
+        POD -.->|"metrics|9090"| METRICS["📊 Metrics\nServer"]
+        METRICS -.->|"aggregation"| HPA["📈 HPA"]
+        HPA -.->|"scale|reduce"| POD
+    end
+```

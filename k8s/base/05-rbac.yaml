@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: todolist
+  namespace: todolist
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: todolist
+  namespace: todolist
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: ["batch"]
+    resources: ["cronjobs", "jobs"]
+    verbs: ["get", "list", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: todolist
+  namespace: todolist
+subjects:
+  - kind: ServiceAccount
+    name: todolist
+    namespace: todolist
+roleRef:
+  kind: Role
+  name: todolist
+  apiGroup: rbac.authorization.k8s.io

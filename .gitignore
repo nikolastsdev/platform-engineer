@@ -1,0 +1,34 @@
+# Terraform state e caches
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Arquivos de plugin DSH (desenvolvimento local)
+.dsh/
+dsh-plugin-*/
+dsh-plugins-test/
+proof-plugin-active.txt
+test-plugin.sh
+
+# Screenshots e backups
+screenshots/
+*.bak
+
+# Runner local (não versionar)
+.github-runner/
