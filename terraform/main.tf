@@ -1,156 +1,212 @@
 # ==============================================================================
 # Platform Engineer Challenge — Dependencies provisioned by Terraform
-# Registry + namespaces + NGINX Ingress + metrics-server + ArgoCD
-# Executado via `make up` (Terraform CLI local)
+# Cluster kind + NGINX Ingress + metrics-server + ArgoCD + Namespaces
+# Executado via `make create` (Terraform CLI local)
+# A imagem da aplicação vem do GitHub Packages (GHCR) — sem registry local.
+#
+# IMPORTANTE: não usamos destroy provisioners — quando kind_cluster é
+# destruído pelo terraform destroy, todos os recursos dentro morrem junto.
+# O Makefile destroy já faz a limpeza extra (kubeconfig, containers).
 # ==============================================================================
 
 locals {
-  registry_url = "${var.registry_name}:${var.registry_port}"
+  kubeconfig = pathexpand("~/.kube/kind-${var.cluster_name}.conf")
 }
 
 # ------------------------------------------------------------------------------
-# Registry Docker local (para o cluster puxar as imagens construídas localmente)
+# Cluster kind (provisionado pelo próprio Terraform via provider tehcyx/kind)
+# - 1 control-plane com portas 80/443 expostas ao host (acesso via localhost)
+# - 3 workers
 # ------------------------------------------------------------------------------
-resource "docker_container" "registry" {
-  count   = var.enable_registry ? 1 : 0
-  name    = var.registry_name
-  image   = "registry:2"
-  restart = "always"
+resource "kind_cluster" "this" {
+  name               = var.cluster_name
+  kubeconfig_path    = pathexpand("~/.kube/kind-${var.cluster_name}.conf")
 
-  ports {
-    internal = 5000
-    external = var.registry_port
-  }
-}
+  kind_config {
+    kind        = "Cluster"
+    api_version = "kind.x-k8s.io/v1alpha4"
 
-# Conecta o registry à rede kind e cria o configmap de descoberta do registry
-resource "null_resource" "registry_config" {
-  count      = var.enable_registry ? 1 : 0
-  depends_on = [docker_container.registry]
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      # Conecta o registry à rede kind (rede só existe após o cluster);
-      # idempotente — falha silenciosamente se já conectado.
-      docker network connect kind ${var.registry_name} 2>/dev/null || true
-
-      KUBECONFIG=~/.kube/kind-${var.cluster_name}.conf kubectl create namespace kube-public --dry-run=client -o yaml | KUBECONFIG=~/.kube/kind-${var.cluster_name}.conf kubectl apply -f -
-      KUBECONFIG=~/.kube/kind-${var.cluster_name}.conf kubectl -n kube-public create configmap local-registry-hosting \
-        --from-literal=host=${local.registry_url} \
-        --from-literal=help-address="http://0.0.0.0:${var.registry_port}" \
-        -o yaml --dry-run=client | KUBECONFIG=~/.kube/kind-${var.cluster_name}.conf kubectl apply -f -
-    EOT
-  }
-}
-
-# ------------------------------------------------------------------------------
-# Namespace da aplicação
-# ------------------------------------------------------------------------------
-resource "kubernetes_namespace" "todolist" {
-  metadata {
-    name = var.app_namespace
-    labels = {
-      app     = "todolist"
-      managed = "terraform"
+    node {
+      role = "control-plane"
+      extra_port_mappings {
+        container_port = 80
+        host_port      = 80
+        listen_address = "0.0.0.0"
+        protocol       = "TCP"
+      }
+      extra_port_mappings {
+        container_port = 443
+        host_port      = 443
+        listen_address = "0.0.0.0"
+        protocol       = "TCP"
+      }
+    }
+    node {
+      role = "worker"
+    }
+    node {
+      role = "worker"
+    }
+    node {
+      role = "worker"
     }
   }
 }
 
 # ------------------------------------------------------------------------------
-# NGINX Ingress Controller
+# NGINX Ingress Controller (helm, após cluster existir)
 # ------------------------------------------------------------------------------
-resource "helm_release" "nginx_ingress" {
-  name             = "ingress-nginx"
-  namespace        = "ingress-nginx"
-  repository       = "https://kubernetes.github.io/ingress-nginx"
-  chart            = "ingress-nginx"
-  version          = "4.11.2"
-  create_namespace = true
+resource "null_resource" "install_ingress" {
+  depends_on = [kind_cluster.this]
 
-  set {
-    name  = "controller.replicaCount"
-    value = "1"
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      export KUBECONFIG="${local.kubeconfig}"
+      echo "==> Instalando NGINX Ingress Controller..."
+      helm upgrade --install ingress-nginx ingress-nginx \
+        --namespace ingress-nginx --create-namespace \
+        --repo https://kubernetes.github.io/ingress-nginx \
+        --version 4.11.2 \
+        --set controller.replicaCount=1 \
+        --set controller.service.type=NodePort \
+        --set controller.hostPort.enabled=true \
+        --set controller.publishService.enabled=true \
+        --wait --timeout 300s
+      echo "==> NGINX Ingress OK"
+    EOT
   }
-  set {
-    name  = "controller.service.type"
-    value = "NodePort"
-  }
-  set {
-    name  = "controller.hostPort.enabled"
-    value = "true"
-  }
-  set {
-    name  = "controller.publishService.enabled"
-    value = "true"
-  }
-
-  # Força o controller para o control-plane: é o único node do kind com as
-  # portas 80/443 expostas ao host (ver terraform/kind-config.yaml), portanto
-  # `http://localhost` acessa o app direto.
-  values = [<<-EOF
-controller:
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-  tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      operator: Exists
-      effect: NoSchedule
-EOF
-  ]
-
-  depends_on = [null_resource.registry_config]
 }
 
 # ------------------------------------------------------------------------------
 # Metrics Server (requerido pelo HPA)
 # ------------------------------------------------------------------------------
-resource "helm_release" "metrics_server" {
-  name       = "metrics-server"
-  namespace  = "kube-system"
-  repository = "https://kubernetes-sigs.github.io/metrics-server"
-  chart      = "metrics-server"
-  version    = "3.12.1"
+resource "null_resource" "install_metrics_server" {
+  depends_on = [null_resource.install_ingress]
 
-  set {
-    name  = "args[0]"
-    value = "--kubelet-insecure-tls"
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      export KUBECONFIG="${local.kubeconfig}"
+      echo "==> Instalando Metrics Server..."
+      helm upgrade --install metrics-server metrics-server \
+        --namespace kube-system \
+        --repo https://kubernetes-sigs.github.io/metrics-server \
+        --version 3.12.1 \
+        --set args[0]="--kubelet-insecure-tls" \
+        --set args[1]="--kubelet-preferred-address-types=InternalIP" \
+        --wait --timeout 120s
+      echo "==> Metrics Server OK"
+    EOT
   }
-  set {
-    name  = "args[1]"
-    value = "--kubelet-preferred-address-types=InternalIP"
-  }
-
-  depends_on = [helm_release.nginx_ingress]
 }
 
 # ------------------------------------------------------------------------------
 # ArgoCD (GitOps)
 # ------------------------------------------------------------------------------
-resource "helm_release" "argocd" {
-  name             = "argocd"
-  namespace        = "argocd"
-  repository       = "https://argoproj.github.io/argo-helm"
-  chart            = "argo-cd"
-  version          = "7.4.0"
-  create_namespace = true
+resource "null_resource" "install_argocd" {
+  depends_on = [null_resource.install_ingress]
 
-  set {
-    name  = "configs.params.server.insecure"
-    value = "true"
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      export KUBECONFIG="${local.kubeconfig}"
+      echo "==> Instalando ArgoCD..."
+      helm upgrade --install argocd argo-cd \
+        --namespace argocd --create-namespace \
+        --repo https://argoproj.github.io/argo-helm \
+        --version 7.4.0 \
+        --set configs.params.server.insecure=true \
+        --set server.service.type=NodePort \
+        --set server.service.nodePorts.https=30080 \
+        --wait --timeout 300s
+      echo "==> ArgoCD OK"
+    EOT
   }
-  set {
-    name  = "server.service.type"
-    value = "NodePort"
-  }
-  set {
-    name  = "server.service.nodePorts.https"
-    value = "30080"
-  }
+}
 
-  depends_on = [helm_release.nginx_ingress]
+# ------------------------------------------------------------------------------
+# Namespace da aplicação (via kubectl)
+# ------------------------------------------------------------------------------
+resource "null_resource" "create_namespaces" {
+  depends_on = [null_resource.install_argocd]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      export KUBECONFIG="${local.kubeconfig}"
+      # Define o context do kind como current-context para kubectl funcionar direto
+      kubectl config set-current-context kind-todolist-platform --kubeconfig="${local.kubeconfig}" 2>/dev/null || \
+        kubectl config use-context kind-todolist-platform --kubeconfig="${local.kubeconfig}" 2>/dev/null || true
+      echo "==> Context setado: $(kubectl config current-context --kubeconfig="${local.kubeconfig}" 2>/dev/null || echo 'kind-todolist-platform')"
+      echo "==> Criando namespaces..."
+      kubectl create namespace todolist --dry-run=client -o yaml | kubectl apply -f -
+      kubectl label namespace todolist app=todolist managed=terraform --overwrite
+      kubectl create namespace todolist-db --dry-run=client -o yaml | kubectl apply -f -
+      # Cria imagePullSecret ghcr-pull para baixar imagem do GHCR
+      if [ -n "$${GH_PAT}" ]; then
+        PAT="$${GH_PAT}"
+      elif command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+        PAT=$(gh auth token)
+      else
+        PAT=""
+      fi
+      if [ -n "$PAT" ]; then
+        echo "==> Criando imagePullSecret ghcr-pull..."
+        kubectl create secret docker-registry ghcr-pull \
+          --namespace=todolist --docker-server=ghcr.io \
+          --docker-username=nikolastsdev --docker-password="$PAT" \
+          --dry-run=client -o yaml | kubectl apply -f -
+      fi
+      echo "==> Namespaces OK"
+    EOT
+  }
+}
+
+# ------------------------------------------------------------------------------
+# Credencial do repo GitOps (ArgoCD)
+# Usa o token do `gh auth` (GitHub CLI) para autenticar o repo privado.
+# ------------------------------------------------------------------------------
+resource "null_resource" "argocd_repo_credentials" {
+  depends_on = [null_resource.install_argocd]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      export KUBECONFIG="${local.kubeconfig}"
+      if ! command -v gh >/dev/null 2>&1; then
+        echo "gh CLI não instalado, pulando credencial ArgoCD"
+        exit 0
+      fi
+      if ! gh auth status >/dev/null 2>&1; then
+        echo "gh CLI não autenticado, pulando credencial ArgoCD"
+        exit 0
+      fi
+      # Usa token do env GH_PAT (se configurado pelo usuário via gh auth login)
+      # Se não houver token, cria com url apenas (funciona para repos públicos)
+      if [ -n "$${GH_PAT}" ]; then
+        PAT="$${GH_PAT}"
+      elif command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+        PAT=$(gh auth token)
+      else
+        echo "AVISO: Sem token GHCR/GitHub. Criando secret sem password. O ArgoCD pode falhar para repo privado."
+        PAT=""
+      fi
+      kubectl create secret generic argocd-repo-nikolastsdev \
+        --namespace=argocd \
+        --type=Opaque \
+        --from-literal=type=git \
+        --from-literal=url=https://github.com/${var.argocd_repo_owner}/${var.argocd_repo_name} \
+        --from-literal=username=${var.argocd_repo_owner} \
+        --from-literal=password="$PAT" \
+        --dry-run=client -o yaml | kubectl apply -f -
+      kubectl label secret argocd-repo-nikolastsdev \
+        --namespace=argocd \
+        argocd.argoproj.io/secret-type=repository \
+        --overwrite
+      kubectl -n argocd rollout restart deployment/argocd-repo-server >/dev/null 2>&1 || true
+      kubectl -n argocd rollout restart statefulset/argocd-application-controller >/dev/null 2>&1 || true
+      echo "==> Credencial ArgoCD OK"
+    EOT
+  }
 }

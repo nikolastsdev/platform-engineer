@@ -3,16 +3,11 @@
 # Cluster local para o Platform Engineer Challenge
 # - 1 control-plane + 3 workers
 # - Portas 80/443 mapeadas para o host (acesso via http://localhost)
-# - containerdConfigPatches: mirror do registry local (localhost:5000 ->
-#   kind-registry:5000) para os pods puxarem as imagens construídas localmente
+# A imagem da aplicação vem do GitHub Packages (GHCR), puxada via imagePullSecret.
 # ==============================================================================
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
-
-containerdConfigPatches:
-  - |-
-    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5000"]
-      endpoint = ["http://kind-registry:5000"]
+name: todolist-platform
 
 nodes:
   - role: control-plane

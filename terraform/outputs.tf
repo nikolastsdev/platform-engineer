@@ -8,14 +8,9 @@ output "kubeconfig_path" {
   value       = "~/.kube/kind-${var.cluster_name}.conf"
 }
 
-output "registry_url" {
-  description = "URL do registry Docker local"
-  value       = local.registry_url
-}
-
 output "app_namespace" {
   description = "Namespace da aplicação"
-  value       = kubernetes_namespace.todolist.metadata[0].name
+  value       = var.app_namespace
 }
 
 output "argocd_namespace" {
@@ -34,6 +29,6 @@ output "app_url" {
 }
 
 output "argocd_url" {
-  description = "URL de acesso ao ArgoCD (NodePort)"
-  value       = "http://localhost:30080"
+  description = "Acesso ao ArgoCD (kind não expõe NodePort no host — use port-forward)"
+  value       = "kubectl -n argocd port-forward svc/argocd-server 8080:443  ->  https://localhost:8080"
 }

@@ -1,19 +1,16 @@
 # ==============================================================================
-# ArgoCD — Applications GitOps
-# O ArgoCD (helm_release.argocd em main.tf) recebe esta Application, que
-# aponta para o repositório Git e sincroniza os manifests da aplicação.
-#
-# Usamos `kubectl apply` via null_resource (lendo o kubeconfig exportado pelo
-# Terraform) em vez do `kubernetes_manifest` para evitar dependência do provider
-# kubernetes, cuja config (host/cert) só fica conhecida após o cluster existir.
+# ArgoCD — Application GitOps
+# Cria a ArgoCD Application que aponta pro repo Git e sincroniza os manifests.
 # ==============================================================================
 
 resource "null_resource" "argocd_app_todolist" {
-  depends_on = [helm_release.argocd]
+  depends_on = [null_resource.create_namespaces, null_resource.argocd_repo_credentials]
 
   provisioner "local-exec" {
     command = <<-EOT
-      export KUBECONFIG="$HOME/.kube/kind-${var.cluster_name}.conf"
+      set -e
+      export KUBECONFIG="${local.kubeconfig}"
+      echo "==> Criando ArgoCD Application..."
       kubectl apply -f - <<'EOF'
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -36,6 +33,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
 EOF
+      echo "==> ArgoCD Application OK"
     EOT
   }
 }
