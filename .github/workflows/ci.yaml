@@ -1,12 +1,11 @@
 # ==============================================================================
-# Pipeline do app — roda no self-hosted runner local
+# Pipeline do app — roda nos runners hosted do GitHub
 #
 # Resumo:
-#   PR/push  → test (Python + Postgres) + scan (Trivy)
-#   push main → build + push imagem ao registry local + deploy (ArgoCD sync)
-#
-# Pré-requisito: self-hosted runner registrado no repo (scripts/setup-runner.sh)
-# Infraestrutura: roda com `make up` / `make setup` antes da primeira execução.
+#   PR/push  → test (Python + Postgres)
+#   push main → build + push imagem ao GitHub Packages (GHCR) + scan (Trivy)
+#   deploy  → atualiza o manifest de imagem no repo GitOps (argo-test-manifests),
+#             que o ArgoCD aplica automaticamente (GitOps)
 # ==============================================================================
 name: App CI/CD
 
@@ -15,12 +14,15 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 env:
-  REGISTRY_PORT: "5000"
   IMAGE_NAME: todolist
+  IMAGE_REGISTRY: ghcr.io
+  IMAGE_OWNER: ${{ github.repository_owner }}
+  # Imagem publicada no GitHub Packages (GHCR) — sem registry local
+  IMAGE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/todolist
   IMAGE_TAG: ${{ github.sha }}
-  CLUSTER_NAME: todolist-platform
 
 jobs:
   # -----------------------------------------------------------------------
@@ -28,7 +30,7 @@ jobs:
   # -----------------------------------------------------------------------
   test:
     name: Test
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     services:
       postgres:
@@ -72,112 +74,101 @@ jobs:
         run: python -c "from app import app; print('App imports OK')"
 
   # -----------------------------------------------------------------------
-  # Job 2: Build + push da imagem para o registry local
+  # Job 2: Build + push da imagem para o GitHub Packages (GHCR)
   # -----------------------------------------------------------------------
   build:
-    name: Build & Push
-    runs-on: self-hosted
+    name: Build & Push (GHCR)
+    runs-on: ubuntu-latest
     needs: test
+    permissions:
+      contents: read
+      packages: write
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build imagem Docker
-        run: |
-          docker build \
-            -t localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
-            -t localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:latest \
-            -f todolist-app/Dockerfile \
-            todolist-app/
+      - name: Login no GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push para registry local
-        run: |
-          docker push localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          docker push localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:latest
-          echo "Imagem enviada para localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:latest"
+      - name: Build & push imagem
+        uses: docker/build-push-action@v6
+        with:
+          context: todolist-app
+          file: todolist-app/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE }}:latest
 
   # -----------------------------------------------------------------------
   # Job 3: Security scan (Trivy)
   # -----------------------------------------------------------------------
   scan:
     name: Security Scan
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: build
+    permissions:
+      contents: read
+      packages: read
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Run Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'localhost:${{ env.REGISTRY_PORT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'
+          image-ref: '${{ env.IMAGE }}:${{ env.IMAGE_TAG }}'
           format: table
           severity: CRITICAL,HIGH
           exit-code: '1'
 
   # -----------------------------------------------------------------------
-  # Job 4: Deploy via ArgoCD (GitOps sync)
+  # Job 4: Deploy via GitOps — atualiza o manifest de imagem no repo de
+  # manifests (argo-test-manifests); o ArgoCD auto-sync aplica no cluster.
   # -----------------------------------------------------------------------
   deploy:
-    name: Deploy (ArgoCD)
-    runs-on: self-hosted
-    needs: [build, scan]
+    name: Deploy (GitOps)
+    runs-on: ubuntu-latest
+    needs: scan
+    permissions:
+      contents: write
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    env:
+      GITOPS_REPO: ${{ secrets.GITOPS_REPO }}
+      GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Aguardar ArgoCD
+      - name: Atualizar imagem no repo GitOps
+        if: env.GITOPS_REPO != '' && env.GITOPS_TOKEN != ''
         run: |
-          export KUBECONFIG="$HOME/.kube/kind-${{ env.CLUSTER_NAME }}.conf"
-          echo "Aguardando ArgoCD server..."
-          kubectl wait --namespace=argocd \
-            --for=condition=available deploy/argocd-server \
-            --timeout=120s || true
+          set -eu
+          REPO="$GITOPS_REPO"
+          WORK="$(mktemp -d)"
+          git clone "https://x-access-token:${GITOPS_TOKEN}@github.com/${REPO}.git" "$WORK"
+          cd "$WORK"
 
-      - name: Forçar sync ArgoCD (re-sync da aplicação)
-        run: |
-          export KUBECONFIG="$HOME/.kube/kind-${{ env.CLUSTER_NAME }}.conf"
+          # Fixa o manifest da app para a imagem GHCR com a tag por SHA.
+          # O ArgoCD detecta a mudança e faz o auto-sync (deploy GitOps).
+          MANIFEST="k8s/base/03-app.yaml"
+          grep -q "image:" "$MANIFEST"
+          sed -i -E "s#image: .*/todolist:[^ ]*#image: ${IMAGE}:${IMAGE_TAG}#" "$MANIFEST"
 
-          # Aguarda a Application existir
-          echo "Verificando Application 'todolist-app'..."
-          kubectl get application todolist-app -n argocd || {
-            echo "Application não encontrada. Aguardando 30s..."
-            sleep 30
-          }
-
-          # Força sync via patch (equivalente a 'argocd app sync')
-          echo "Forçando sync do ArgoCD..."
-          kubectl -n argocd patch application todolist-app --type merge \
-            -p '{
-              "metadata":{"annotations":{"argocd.argoproj.io/refresh":"true"}},
-              "operation":{"sync":{"revision":"HEAD","prune":true}}
-            }' 2>/dev/null || echo "Patch ignorado — ArgoCD auto-sync ativado."
-
-          # Aguarda a Application ficar Synced
-          echo "Aguardando sync..."
-          for i in $(seq 1 30); do
-            STATUS=$(kubectl get application todolist-app -n argocd -o jsonpath='{.status.sync.status}' 2>/dev/null || echo "Unknown")
-            if [ "$STATUS" = "Synced" ]; then
-              echo "ArgoCD Synced!"
-              break
-            fi
-            echo "  [$i/30] sync.status=$STATUS — aguardando..."
-            sleep 10
-          done
-
-      - name: Verificar deploy
-        run: |
-          export KUBECONFIG="$HOME/.kube/kind-${{ env.CLUSTER_NAME }}.conf"
-          echo "=== Pods ==="
-          kubectl get pods -n todolist -o wide
-          echo ""
-          echo "=== Health ==="
-          kubectl -n todolist rollout status deploy/todolist --timeout=120s || true
-          echo ""
-          curl -sf http://localhost/healthz && echo "Health OK" || echo "Health check via localhost não respondeu (porta pode estar mapeada)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Manifest já aponta para $IMAGE_TAG — nada a commitar."
+          else
+            git -c commit.gpgsign=false commit -m "chore: atualiza imagem todolist para $IMAGE_TAG [skip ci]"
+            git push origin HEAD:main
+          fi
+          rm -rf "$WORK"
