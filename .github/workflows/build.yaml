@@ -28,7 +28,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./todolist-app
-          file: ./todolist-app/Dockerfile
+          file: Dockerfile
           push: true
           tags: |
             ${{ env.IMAGE }}:latest
