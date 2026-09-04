@@ -51,10 +51,8 @@ make destroy       # terraform destroy + cleanup
 # Acesso
 make verify        # health checks
 kubectl -n argocd port-forward svc/argocd-server 8080:443
-# App direto (port-forward — kind hostPort 80 é do ingress):
-# kubectl port-forward -n todolist svc/todolist 8090:80 &
-# curl http://localhost:8090/healthz  => HTTP 200
-# (App roda no cluster; ingress-nginx expõe porta 80 do container, não do host livre)
+kubectl port-forward -n todolist svc/todolist 8090:80 &
+# App: http://localhost:8090/healthz
 ```
 
 ## Estrutura Atualizada

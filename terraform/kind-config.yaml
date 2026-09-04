@@ -1,9 +1,7 @@
 # ==============================================================================
 # Kind Cluster Configuration
-# Cluster local para o Platform Engineer Challenge
 # - 1 control-plane + 3 workers
-# - Portas 80/443 mapeadas para o host (acesso via http://localhost)
-# A imagem da aplicação vem do GitHub Packages (GHCR), puxada via imagePullSecret.
+# - Portas expostas no host para acesso direto (sem port-forward)
 # ==============================================================================
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -12,12 +10,12 @@ name: todolist-platform
 nodes:
   - role: control-plane
     extraPortMappings:
-      - containerPort: 80
-        hostPort: 80
+      - containerPort: 5000
+        hostPort: 5000
         listenAddress: 0.0.0.0
         protocol: TCP
-      - containerPort: 443
-        hostPort: 443
+      - containerPort: 8080
+        hostPort: 8080
         listenAddress: 0.0.0.0
         protocol: TCP
   - role: worker

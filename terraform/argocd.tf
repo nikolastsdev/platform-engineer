@@ -10,6 +10,30 @@ resource "null_resource" "argocd_app_todolist" {
     command = <<-EOT
       set -e
       export KUBECONFIG="${local.kubeconfig}"
+      kubectl apply -f - <<'EOF'
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server
+  namespace: argocd
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: argocd.localhost
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 443
+EOF
+      echo "==> ArgoCD Ingress OK"
       echo "==> Criando ArgoCD Application..."
       kubectl apply -f - <<'EOF'
 apiVersion: argoproj.io/v1alpha1
