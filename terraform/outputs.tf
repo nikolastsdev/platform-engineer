@@ -32,3 +32,8 @@ output "argocd_url" {
   description = "Acesso ao ArgoCD (kind não expõe NodePort no host — use port-forward)"
   value       = "kubectl -n argocd port-forward svc/argocd-server 8080:443  ->  https://localhost:8080"
 }
+
+output "argocd_password" {
+  description = "Comando para pegar a senha do admin do ArgoCD"
+  value       = "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
+}

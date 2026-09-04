@@ -76,7 +76,7 @@ resource "null_resource" "install_ingress" {
         --set controller.nodeSelector.node-role\\.kubernetes\\.io/control-plane="" \
         --set controller.tolerations[0].operator=Exists \
         --set controller.publishService.enabled=true \
-        --wait --timeout 300s
+        --wait --timeout 300s > /dev/null 2>&1
       echo "==> NGINX Ingress OK (control-plane + hostNetwork)"
     EOT
   }
@@ -99,7 +99,7 @@ resource "null_resource" "install_metrics_server" {
         --version 3.12.1 \
         --set args[0]="--kubelet-insecure-tls" \
         --set args[1]="--kubelet-preferred-address-types=InternalIP" \
-        --wait --timeout 120s
+        --wait --timeout 120s > /dev/null 2>&1
       echo "==> Metrics Server OK"
     EOT
   }
@@ -123,7 +123,7 @@ resource "null_resource" "install_argocd" {
         --set configs.params.server.insecure=true \
         --set server.service.type=NodePort \
         --set server.service.nodePorts.https=30080 \
-        --wait --timeout 300s
+        --wait --timeout 300s > /dev/null 2>&1
       echo "==> ArgoCD OK"
     EOT
   }
@@ -148,19 +148,30 @@ resource "null_resource" "create_namespaces" {
       kubectl label namespace todolist app=todolist managed=terraform --overwrite
       kubectl create namespace todolist-db --dry-run=client -o yaml | kubectl apply -f -
       # Cria imagePullSecret ghcr-pull para baixar imagem do GHCR
+      # Usa python para gerar o .dockerconfigjson (evita erro de JSON vazio)
+      PAT=""
       if [ -n "$${GH_PAT}" ]; then
         PAT="$${GH_PAT}"
       elif command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-        PAT=$(gh auth token)
-      else
-        PAT=""
+        PAT=$(gh auth token 2>/dev/null || echo "")
       fi
       if [ -n "$PAT" ]; then
         echo "==> Criando imagePullSecret ghcr-pull..."
-        kubectl create secret docker-registry ghcr-pull \
-          --namespace=todolist --docker-server=ghcr.io \
-          --docker-username=nikolastsdev --docker-password="$PAT" \
-          --dry-run=client -o yaml | kubectl apply -f -
+        python3 -c "
+import json, base64, sys
+pat = sys.argv[1]
+config = {'auths': {'ghcr.io': {'username': 'nikolastsdev', 'auth': base64.b64encode(f'nikolastsdev:{pat}'.encode()).decode()}}}
+data = base64.b64encode(json.dumps(config).encode()).decode()
+print('apiVersion: v1')
+print('kind: Secret')
+print('metadata:')
+print('  namespace: todolist')
+print('  name: ghcr-pull')
+print('type: kubernetes.io/dockerconfigjson')
+print('data:')
+print('  .dockerconfigjson: ' + data)
+" "$PAT" | kubectl apply -f -
+        kubectl annotate secret ghcr-pull --namespace=todolist argocd.argoproj.io/ignore=true --overwrite 2>/dev/null || true
       fi
       echo "==> Namespaces OK"
     EOT
