@@ -2,6 +2,8 @@
 
 Pipeline CI/CD local com **Terraform + Kind + ArgoCD (GitOps)** para deploy automatizado de uma aplicação Flask com PostgreSQL.
 
+> Atualizado: `make create` / `make destroy` (não `make up`); `todolist-app/` como pasta normal (não submódulo); CI via `.github/workflows/build.yaml`; imagem `ghcr.io/nikolastsdev/platform-engineer/todolist:latest`; nome do usuário atualizado para **Nikolas Schaffer**.
+
 ## Arquitetura
 
 ```
@@ -9,36 +11,25 @@ Pipeline CI/CD local com **Terraform + Kind + ArgoCD (GitOps)** para deploy auto
 │  Host Machine (Linux)                                            │
 │                                                                   │
 │  ┌─────────────────┐     ┌──────────────────────────────────┐   │
-│  │  make up (CLI)  │────▶│  Terraform (providers: kind,     │   │
-│  │  Terraform       │     │  helm, kubernetes, docker)       │   │
+│  │  make create    │────▶│  Terraform (providers: kind,     │   │
+│  │  (CLI)          │     │  null)                           │   │
 │  └─────────────────┘     └──────────────────────────────────┘   │
 │         │                            │                            │
 │         │               ┌────────────┴────────────────┐         │
-│         │               │ 1. kind-registry :5000      │         │
-│         │               │ 2. kind cluster             │         │
-│         │               │    ├─ control-plane         │         │
-│         │               │    ├─ worker ×3             │         │
-│         │               │    ├─ ingress-nginx (NodePort)       │
-│         │               │    └─ metrics-server        │         │
-│         │               │ 3. ArgoCD (Helm)            │         │
+│         │               │ 1. kind cluster             │         │
+│         │               │    ├─ control-plane (4 nodes)         │
+│         │               │    ├─ ingress-nginx           │         │
+│         │               │    └─ metrics-server         │         │
+│         │               │ 2. ArgoCD (Helm + GitOps)   │         │
 │         │               │    └─ Application: todolist │         │
 │         │               └─────────────────────────────┘         │
 │         │                            │                            │
 │  ┌──────┴─────────┐          ┌───────┴───────────────┐         │
 │  │ GitHub Actions │          │  kind cluster          │         │
-│  │ (self-hosted)  │          │  ┌──────────────────┐  │         │
-│  │                │          │  │ todolist namespace│  │         │
-│  │ jobs:          │───────┐  │  │  ├─ App (3 pods) │  │         │
-│  │  test          │       │  │  │  ├─ HPA (2-10)   │  │         │
-│  │  build+push    │       │  │  │  ├─ CronJob      │  │         │
-│  │  scan (trivy)  │       │  │  │  └─ Ingress      │  │         │
-│  │  deploy (sync) │       │  │  └──────────────────┘  │         │
-│  └────────────────┘       │  │  ┌──────────────────┐  │         │
-│                           │  │  │ todolist-db ns   │  │         │
-│                           │  │  │  └─ PostgreSQL 15│  │         │
-│                           │  │  └──────────────────┘  │         │
-│                           │  └────────────────────────┘         │
-│                           └───────────────────────────────────────┘
+│  │ (CI/CD)        │          │  ├─ todolist namespace │         │
+│  │ build.yaml     │          │  ├─ todolist-db (PG)     │         │
+│  └────────────────┘          │  └─ app (3 pods)        │         │
+│                              └────────────────────────┘         │
 └───────────────────────────────────────────────────────────────────┘
 ```
 
@@ -46,198 +37,57 @@ Pipeline CI/CD local com **Terraform + Kind + ArgoCD (GitOps)** para deploy auto
 
 | Etapa | Ferramenta | Onde roda |
 |-------|-----------|-----------|
-| Provisionamento (cluster + deps) | Terraform + Kind + Helm | CLI local (`make up`) |
-| Build da imagem | Docker | GitHub Actions (self-hosted runner) |
-| Testes (Python + Postgres) | pytest / import check | GitHub Actions (self-hosted runner) |
-| Security scan | Trivy | GitHub Actions (self-hosted runner) |
-| Deploy da aplicação | ArgoCD (GitOps sync) | GitHub Actions + ArgoCD |
+| Provisionamento (cluster + deps) | Terraform + Kind + Helm | CLI local (`make create`) |
+| Build da imagem | Docker / build-push-action | GitHub Actions (`.github/workflows/build.yaml`) |
+| Deploy da aplicação | ArgoCD (GitOps sync) | ArgoCD + repo `nikolastsdev/argo-test-manifests` |
 
-## Pré-requisitos
+## Comandos
 
 ```bash
-# Ferramentas obrigatórias
-docker --version      # Docker daemon rodando
-kind --version        # Kubernetes IN Docker
-kubectl version       # CLI do Kubernetes
-terraform --version   # Infrastructure as Code
-helm version          # Package manager do Kubernetes
-```
+# Criar / destruir (dois comandos)
+make create        # terraform init + apply
+make destroy       # terraform destroy + cleanup
 
-> **Java 17+** é necessário apenas para rodar o GitHub Actions runner (`scripts/setup-runner.sh`).
-
-## Setup Rápido
-
-### 1. Setup completo (recomendado)
-
-```bash
-make setup
-# ou, explicitamente:
-./scripts/setup.sh
-```
-
-Isso executa:
-1. `make up` → Terraform: registry + cluster kind + ingress + metrics-server + ArgoCD
-2. Build + push da imagem da app para `localhost:5000`
-3. Força sync do ArgoCD (GitOps)
-
-### 2. Apenas provisionar a infraestrutura
-
-```bash
-make up
-```
-
-Cria: `kind-registry`, cluster `todolist-platform`, NGINX Ingress, metrics-server, ArgoCD + Application GitOps.
-
-### 3. Verificar saúde
-
-```bash
-make verify
-# ou:
-./scripts/verify.sh
-```
-
-## URLs de Acesso
-
-| Serviço | URL |
-|---------|-----|
-| Aplicação Flask | `http://localhost` (hostPort do ingress-nginx no control-plane) |
-| App API (healthz) | `http://localhost/healthz` |
-| ArgoCD UI | via port-forward (kind não expõe NodePort no host) |
-
-**Credenciais padrão (local):**
-- App: `admin` / `admin123`
-- ArgoCD: `admin` / `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d`
-
-> O ArgoCD roda como `NodePort` (`80:30080`), mas o Kind não expõe NodePorts
-> diretamente no host. Para abrir a UI:
-
-```bash
-make up                          # provisiona tudo
+# Acesso
+make verify        # health checks
 kubectl -n argocd port-forward svc/argocd-server 8080:443
-# acesse https://localhost:8080  (aceite o certificado self-signed)
+http://localhost    # app (via ingress-nginx)
 ```
 
-## Pipeline CI/CD (GitHub Actions)
-
-A pipeline em `.github/workflows/ci.yaml` roda no **self-hosted runner** registrado localmente.
-
-### Triggers
-
-- **`push to main`** → build + test + scan + deploy via ArgoCD
-- **`PR to main`** → test apenas (sem deploy)
-
-### Jobs
-
-| Job | Descrição | Requer push main? |
-|-----|-----------|--------------------|
-| `test` | Import check com Python 3.11 + PostgreSQL service | Não |
-| `build` | Build imagem Docker, push para `localhost:5000` | Sim |
-| `scan` | Trivy (CRITICAL/HIGH fails build) | Sim |
-| `deploy` | Força sync ArgoCD → GitOps aplica os manifests | Sim |
-
-### Setup do runner local
-
-```bash
-# Token de registro (obtido em: Settings > Actions > Runners)
-REPO_URL=https://github.com/seu-usuario/seu-repo \
-RUNNER_TOKEN=<token> \
-make setup-runner
-# ou:
-./scripts/setup-runner.sh
-```
-
-## Estrutura do Repositório
+## Estrutura Atualizada
 
 ```
-├── terraform/                 # IaC — provisionamento via `make up`
-│   ├── providers.tf           # Providers: kubernetes + helm + docker
-│   ├── kind-config.yaml       # Config do cluster kind (mirror containerd + portas)
-│   ├── main.tf                # Registry + Ingress + Metrics + ArgoCD
-│   ├── variables.tf
-│   └── outputs.tf
-│
-├── k8s/
-│   ├── base/                  # Manifests GitOps (sincronizados pelo ArgoCD)
-│   │   ├── 00-namespace.yaml
-│   │   ├── 01-configmap.yaml
-│   │   ├── 01-secret.yaml
-│   │   ├── 02-postgresql.yaml
-│   │   ├── 03-app.yaml
-│   │   ├── 04-ingress.yaml
-│   │   ├── 05-rbac.yaml
-│   │   ├── 05-cronjob.yaml
-│   │   └── kustomization.yaml
-│   └── helm/
-│       └── todolist-app/      # Helm chart para deploy manual via CLI
-│           ├── Chart.yaml
-│           ├── values.yaml
-│           └── templates/
-│
-├── todolist-app/              # App Flask
+├── terraform/                 # IaC (kind, ingress, metrics, argocd, namespaces)
+│   ├── main.tf                # null_resource + local-exec (kubeconfig via kind)
+│   ├── argocd.tf              # repo credentials (PAT via gh auth token)
+│   ├── variables.tf           # argocd_repo_owner, argocd_repo_name
+│   ├── providers.tf           # kind + null
+│   └── outputs.tf             # app_namespace, kubeconfig_path
+├── todolist-app/              # App Flask (pasta normal, não submódulo)
+│   ├── Dockerfile
 │   ├── app.py
-│   ├── requirements.txt
-│   └── Dockerfile
-│
+│   └── requirements.txt
 ├── .github/workflows/
-│   └── ci.yaml                # Pipeline: test + build + scan + deploy
-│
-├── scripts/
-│   ├── setup.sh               # Setup completo (make up + build + sync)
-│   ├── teardown.sh            # Remove toda a infra
-│   ├── verify.sh              # Health checks
-│   └── setup-runner.sh        # Instala GitHub Actions runner local
-│
-├── Makefile
-├── .gitignore
+│   └── build.yaml             # Build + Push para GHCR (login via GITHUB_TOKEN)
+├── Makefile                   # create / destroy / clean
+├── k8s/base/                  # Manifests GitOps (ArgoCD sync)
 └── README.md
 ```
 
-## Comandos Úteis
+## Autenticação ArgoCD → GitHub
 
-```bash
-# Provisionar infraestrutura
-make up          # terraform init + apply (registry + cluster + deps)
-make down        # terraform destroy
+- `argocd_repo_credentials` (terraform/null_resource) cria secret `argocd-repo-nikolastsdev` no namespace `argocd`
+- Usa `gh auth token` para autenticar repo privado
+- `imagePullSecret ghcr-pull` criado no namespace `todolist` para acessar `ghcr.io`
 
-# Deploy da aplicação
-make setup       # make up + build/push imagem + ArgoCD sync
+## Pipeline CI (funcionando)
 
-# Verificação
-make verify      # Health checks completos
+- `.github/workflows/build.yaml`: `workflow_dispatch` + `push`; `context: .`; `file: ./todolist-app/Dockerfile`; `permissions: packages: write`
+- Build passa: `completed success` (run `33823052362`)
+- Imagem: `ghcr.io/nikolastsdev/platform-engineer/todolist:latest`
 
-# Runner local
-make setup-runner # Instala e registra GitHub Actions runner
+## Notes
 
-# Helm chart (deploy manual)
-helm upgrade --install todolist-app ./k8s/helm/todolist-app \
-  --namespace todolist --create-namespace \
-  --set autoscaling.enabled=false
-
-# Teardown completo
-make teardown    # destroy + limpeza
-```
-
-## Arquitetura Decision Records (ADRs)
-
-| ADR | Decisão |
-|-----|---------|
-| ADR-001 | KIND para cluster local |
-| ADR-002 | Terraform para IaC |
-| ADR-003 | NGINX Ingress Controller |
-| ADR-004 | PostgreSQL com emptyDir |
-| ADR-005 | HPA v2 (CPU 70%, Mem 80%) |
-| ADR-006 | Registry Docker local |
-| ADR-007 | CronJob para limpeza |
-| ADR-008 | Estrutura GitOps-ready |
-| ADR-009 | ServiceAccount com RBAC mínimo |
-| ADR-010 | Trivy para security scan |
-
-Ver detalhes em [docs/adr/](docs/adr/).
-
-## Melhorias Futuras
-
-- [ ] TLS via cert-manager (Let's Encrypt)
-- [ ] Prometheus + Grafana (monitoring)
-- [ ] Velero (backups)
-- [ ] SealedSecrets (secret management)
-- [ ] Network Policies (micro-segmentation)
+- `terraform/main.tf` usa `null_resource` + `local-exec` (não usa kubernetes/helm providers — kubeconfig só existe após `kind_cluster` ser criado)
+- `kind_config` usa `kubeconfig_path = pathexpand("~/.kube/kind-todolist-platform.conf")`
+- O `Dockerfile` usa `python:3.11-slim`; app roda em porta 5000 (gunicorn)
