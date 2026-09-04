@@ -29,6 +29,8 @@ spec:
         app.kubernetes.io/component: api
         app.kubernetes.io/part-of: todolist
     spec:
+      imagePullSecrets:
+        - name: ghcr-pull
       serviceAccountName: todolist
       securityContext:
         runAsNonRoot: true

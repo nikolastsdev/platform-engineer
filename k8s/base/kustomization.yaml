@@ -14,9 +14,10 @@ resources:
   - ingress.yaml
   - rbac.yaml
   - cleanup-cronjob.yaml
+  - ghcr-pull-secret.yaml
 
 labels:
   - pairs:
       app.kubernetes.io/part-of: todolist
       app.kubernetes.io/environment: kind-local
-    includeSelectors: true
+    includeSelectors: false
