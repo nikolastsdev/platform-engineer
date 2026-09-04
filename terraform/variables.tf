@@ -13,7 +13,7 @@ variable "app_namespace" {
 variable "argocd_repo_url" {
   description = "Git repository URL watched by ArgoCD (GitOps)"
   type        = string
-  default     = "https://github.com/nikolastsdev/argo-test-manifests"
+  default     = "https://github.com/nikolastsdev/platform-engineer"
 }
 
 variable "argocd_repo_path" {
@@ -31,5 +31,5 @@ variable "argocd_repo_owner" {
 variable "argocd_repo_name" {
   description = "Repo name for ArgoCD credentials"
   type        = string
-  default     = "argo-test-manifests"
+  default     = "platform-engineer"
 }
