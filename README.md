@@ -91,4 +91,3 @@ http://localhost    # app (via ingress-nginx)
 - `terraform/main.tf` usa `null_resource` + `local-exec` (não usa kubernetes/helm providers — kubeconfig só existe após `kind_cluster` ser criado)
 - `kind_config` usa `kubeconfig_path = pathexpand("~/.kube/kind-todolist-platform.conf")`
 - O `Dockerfile` usa `python:3.11-slim`; app roda em porta 5000 (gunicorn)
-# teste
