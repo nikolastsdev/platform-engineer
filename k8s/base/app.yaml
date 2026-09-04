@@ -29,6 +29,14 @@ spec:
         app.kubernetes.io/component: api
         app.kubernetes.io/part-of: todolist
     spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z postgresql.todolist-db.svc.cluster.local 5432; do echo waiting for db; sleep 2; done; echo db ready']
+          resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
       imagePullSecrets:
         - name: ghcr-pull
       serviceAccountName: todolist
