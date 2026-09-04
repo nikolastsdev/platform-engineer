@@ -18,18 +18,36 @@ Terraform é declarativo, versionado e permite `terraform apply` repetível. Já
 ### 3. Por que Helm?
 O `todolist-app` precisa de container, service, ingress, HPA. Helm permite parametrizar tudo sem duplicar YAML.
 
-### 4. Por que Flux ao invés de ArgoCD?
-Flux (GitOps) é mais leve e nativo em Kubernetes. O deploy é automático ao fazer `git push` no repo de manifests.
+### 4. Por que ArgoCD ao invés de Flux?
+ArgoCD é o GitOps implementado neste projeto (via Helm chart + `argocd_app_todolist` em `terraform/main.tf`). Oferece UI de sync status (`Synced`/`Healthy`), rollback visual e integração direta com repositórios privados via PAT (`gh auth token`).
+Flux seria uma alternativa válida, mas o desafio já continava infraestrutura ArgoCD (`terraform/argocd.tf`) e a documentação do projeto já referenciava `argo-test-manifests` como repo de manifests. Manter ArgoCD evita retrabalho.
+**Descartado:** Flux (seria uma migração sem ganho no escopo definido).
 
 ### 5. Escalabilidade: HPA + PDB
 - HPA (`autoscaling/v2`) escala pods baseado em CPU/memória
 - PDB (`PodDisruptionBudget`) garante que pelo menos 1 pod esteja disponível durante atualizações
+- Ambas em `k8s/base/app.yaml` (HPA) e `k8s/base/pdb.yaml` (PDB); Helm chart em `k8s/helm/` é template de referência (não usado no fluxo GitOps)
 
 ### 6. Resiliência: Probes
 - `livenessProbe` detecta aplicação travada
 - `readinessProbe` remove o pod do service se não estiver pronto
 - `startupProbe` protege inicialização lenta
 
-### 8. Plugin mermaid para renderização
+### 7. Helm + Kustomize: por que ambos?
+- `k8s/helm/`: Helm chart com valores default — serve como template parametrizável e para testes com `helm template`
+- `k8s/base/`: Kustomize com manifests concretizados — é o que o ArgoCD sincroniza no cluster
+- Decisão: ArgoCD aponta para `k8s/base` (Kustomize) para manter GitOps declarativo e simples
+
+### 8. PostgreSQL sem persistência (emptyDir)
+O banco PostgreSQL (`k8s/base/postgresql.yaml`) usa `emptyDir` — dados são perdidos em restart.
+Isso é **aceitável para o escopo local do desafio**: reduz complexidade e custo, e o PDF não exige persistência.
+Em produção, usaríamos PersistentVolumeClaim (ex: `hostPath` para Kind ou `StorageClass` em cloud).
+
+### 9. Repositório GitOps: mono-repo
+O repositório de aplicação (`nikolastsdev/platform-engineer`) também contém os manifests (`k8s/base/`).
+Isso simplifica: um único repo para CI + GitOps.
+**Alternativa considerada:** Repo separado de manifests (ex: `nikolastsdev/argo-test-manifests`) — descartada para evitar overhead de sincronização entre dois repos.
+
+### 10. Plugin mermaid para renderização
 Criado `dsh-plugin-mermaid/` — plugin que registra `mermaidRenderer` no cordis do DSH, com CLI `dsh-render-md` (PNG/SVG) e `dsh-md-preview` (servidor local com Mermaid.js CDN).
 O README é o índice. `docs/DECISOES.md` explica o "porquê". `docs/DESAFIOS.md` registra obstáculos.

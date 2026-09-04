@@ -12,8 +12,8 @@ resources:
   - postgresql.yaml
   - app.yaml
   - ingress.yaml
+  - pdb.yaml
   - rbac.yaml
-  - cleanup-cronjob.yaml
   - ghcr-pull-secret.yaml
 
 labels:
