@@ -97,11 +97,13 @@ metadata:
   labels:
     app: todolist
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - name: http
-      port: 80
-      targetPort: http
+      port: 5000
+      targetPort: 5000
+      nodePort: 30000
+      nodePort: 30000
       protocol: TCP
   selector:
     app: todolist
