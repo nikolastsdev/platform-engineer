@@ -157,9 +157,9 @@ jobs:
           cd "$WORK"
 
           # Fixa o manifest da app para a imagem GHCR com a tag por SHA.
-          # O ArgoCD detecta a mudança e faz o auto-sync (deploy GitOps).
-          MANIFEST="k8s/base/03-app.yaml"
-          grep -q "image:" "$MANIFEST"
+          # O ArgoCD (selfHeal=true, prune=true) no repo platform-engineer
+          # detecta a mudança em k8s/base/app.yaml e aplica automaticamente.
+          MANIFEST="k8s/base/app.yaml"
           sed -i -E "s#image: .*/todolist:[^ ]*#image: ${IMAGE}:${IMAGE_TAG}#" "$MANIFEST"
 
           git config user.name "github-actions[bot]"
