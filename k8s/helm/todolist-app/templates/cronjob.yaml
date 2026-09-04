@@ -1,29 +1,35 @@
+{{- if .Values.cleanupCronjob.enabled }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ include "todolist-app.fullname" . }}-cleanup
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ include "todolist-app.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- include "todolist-app.labels" . | nindent 4 }}
 spec:
   schedule: {{ .Values.cleanupCronjob.schedule | quote }}
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 60
   jobTemplate:
     metadata:
       labels:
-        app.kubernetes.io/name: cleanup
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: cleanup
+        {{- include "todolist-app.selectorLabels" . | nindent 8 }}
     spec:
       template:
+        metadata:
+          labels:
+            app.kubernetes.io/component: cleanup
+            {{- include "todolist-app.selectorLabels" . | nindent 12 }}
         spec:
           restartPolicy: OnFailure
           serviceAccountName: {{ include "todolist-app.serviceAccountName" . }}
           containers:
             - name: cleanup
               image: "{{ .Values.cleanupCronjob.image.repository }}:{{ .Values.cleanupCronjob.image.tag }}"
+              imagePullPolicy: IfNotPresent
               command: ["sh", "-c"]
               args:
                 - |
@@ -33,7 +39,7 @@ spec:
                     curl -sf -X POST \
                       -H "X-Cleanup-Token: $TOKEN" \
                       -H "Content-Type: application/json" \
-                      http://{{ include "todolist-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local/cleanup || echo "Cleanup request failed (non-critical)"
+                      "http://{{ include "todolist-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}/cleanup" || echo "Cleanup request failed (non-critical)"
                   else
                     echo "No CLEANUP_TOKEN configured; skipping cleanup request"
                   fi
@@ -44,3 +50,4 @@ spec:
                     secretKeyRef:
                       name: {{ include "todolist-app.fullname" . }}-secrets
                       key: CLEANUP_TOKEN
+{{- end }}

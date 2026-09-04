@@ -1,61 +1,109 @@
 # ==============================================================================
-# Valores default para o chart todolist-app
-# ==============================================================================
-image:
-  repository: localhost:5000/todolist
-  tag: latest
-  pullPolicy: IfNotPresent
+# Default values for todolist-app.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+# ==============================================================================}
 
-replicaCount: 2
+# -- Override the chart name
+nameOverride: ""
+# -- Override the full resource names (release + name)
+fullnameOverride: ""
+
+# -- Common labels to add to all resources (optional)
+commonLabels: {}
+# Example:
+# environment: production
+# team: platform-engineering
+
+image:
+  # -- Image repository
+  repository: ghcr.io/nikolastsdev/platform-engineer/todolist
+  # -- Image tag (defaults to Chart.AppVersion)
+  tag: latest
+  # -- Image pull policy
+  pullPolicy: Always
+  # -- Image pull secrets
+  pullSecrets:
+    - name: ghcr-pull
+
+# -- Number of replicas
+replicaCount: 3
+
+serviceAccount:
+  # -- Create service account
+  create: true
+  # -- Service account name
+  name: ""
+  # -- Additional annotations to add to the service account
+  annotations: {}
 
 service:
-  type: ClusterIP
-  port: 80
+  # -- Service type
+  type: NodePort
+  # -- Service port
+  port: 5000
+  # -- Service target port
   targetPort: 5000
+  # -- Service node port (only if type=NodePort)
+  nodePort: 30000
 
 ingress:
+  # -- Enable ingress
   enabled: true
+  # -- Ingress class name
   className: nginx
-  annotations: {}
+  # -- Ingress annotations
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  # -- Ingress hosts configuration
   hosts:
     - host: localhost
       paths:
         - path: /
           pathType: Prefix
+  # -- TLS configuration
   tls: []
 
-resources:
-  requests:
-    cpu: 100m
-    memory: 128Mi
-  limits:
-    cpu: 500m
-    memory: 512Mi
-
 autoscaling:
+  # -- Enable Horizontal Pod Autoscaler
   enabled: true
   minReplicas: 2
-  maxReplicas: 6
+  maxReplicas: 10
+  # -- CPU target utilization percentage
   targetCPUUtilizationPercentage: 70
+  # -- Memory target utilization percentage
   targetMemoryUtilizationPercentage: 80
 
 podDisruptionBudget:
+  # -- Enable Pod Disruption Budget
   enabled: true
+  # -- Minimum available pods
   minAvailable: 1
 
+resources:
+  # We usually recommend specifying resources and leaving this blank,
+  # as this allows cluster-level adjustments. Memory limits should be configured properly.
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# -- Probes configuration
 probes:
   liveness:
     path: /healthz
-    initialDelaySeconds: 30
-    periodSeconds: 15
-    timeoutSeconds: 3
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
     failureThreshold: 3
   readiness:
     path: /healthz
-    initialDelaySeconds: 10
-    periodSeconds: 10
+    initialDelaySeconds: 5
+    periodSeconds: 5
     timeoutSeconds: 3
-    failureThreshold: 3
+    failureThreshold: 2
   startup:
     path: /healthz
     initialDelaySeconds: 5
@@ -63,33 +111,75 @@ probes:
     timeoutSeconds: 3
     failureThreshold: 30
 
+# -- Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# -- Node selector
+nodeSelector: {}
+# Example:
+# kubernetes.io/os: linux
+
+# -- Tolerations
+# Example:
+# - key: "node-role.kubernetes.io/control-plane"
+#   operator: "Exists"
+#   effect: "NoSchedule"
+tolerations: []
+
+# -- Affinity rules
+# Example:
+# nodeAffinity:
+#   requiredDuringSchedulingIgnoredDuringExecution:
+#     nodeSelectorTerms:
+#     - matchExpressions:
+#       - key: kubernetes.io/hostname
+#         operator: In
+#         values:
+#         - my-node
+# Example:
+# podAntiAffinity:
+#   preferredDuringSchedulingIgnoredDuringExecution:
+#   - weight: 100
+#     podAffinityTerm:
+#       labelSelector:
+#         matchLabels:
+#           app.kubernetes.io/name: todolist-app
+#       topologyKey: kubernetes.io/hostname
+affinity: {}
+
+# -- Environment variables configured via ConfigMap
+# These are the base environment variables for the application.
 env:
-  APP_NAME: "TodoList"
-  APP_COLOR: "purple"
+  APP_NAME: "TodoList Platform"
+  APP_COLOR: "blue"
   APP_PORT: "5000"
   LOG_LEVEL: "info"
   DB_HOST: "postgresql.todolist-db.svc.cluster.local"
   DB_PORT: "5432"
   DB_NAME: "todolist"
 
+# -- Secrets managed by the chart
+# IMPORTANT: These are default/example values.
+# For production, use an external secrets manager (SealedSecrets, External Secrets Operator,
+# Vault, or a CI secret injection mechanism) instead of hardcoding values in values.yaml.
 secrets:
   dbUser: todolist
   dbPassword: todolistpw
-  sessionKey: "change-me-in-production"
+  sessionKey: "change-this-session-key"
   adminUser: admin
   adminPassword: admin123
   cleanupToken: "cleanup-token-local"
 
-serviceAccount:
-  create: true
-  name: todolist-app
-
-rbac:
-  enabled: true
-
+# -- Cleanup cronjob configuration
 cleanupCronjob:
+  # -- Enable cleanup cronjob
   enabled: true
+  # -- Cron schedule
   schedule: "*/5 * * * *"
+  # -- Cleanup image config
   image:
     repository: curlimages/curl
     tag: latest

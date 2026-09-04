@@ -29,14 +29,14 @@ resource "kind_cluster" "this" {
     node {
       role = "control-plane"
       extra_port_mappings {
-        container_port = 80
-        host_port      = 80
+        container_port = 30000
+        host_port      = 5000
         listen_address = "0.0.0.0"
         protocol       = "TCP"
       }
       extra_port_mappings {
-        container_port = 443
-        host_port      = 443
+        container_port = 30080
+        host_port      = 8080
         listen_address = "0.0.0.0"
         protocol       = "TCP"
       }

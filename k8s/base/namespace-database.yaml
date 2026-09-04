@@ -1,15 +1,9 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: todolist
-  labels:
-    app.kubernetes.io/name: todolist
-    app.kubernetes.io/managed-by: argocd
----
-apiVersion: v1
-kind: Namespace
-metadata:
   name: todolist-db
   labels:
     app.kubernetes.io/name: postgresql
     app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: todolist

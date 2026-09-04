@@ -3,9 +3,8 @@ kind: ConfigMap
 metadata:
   name: {{ include "todolist-app.fullname" . }}-env
   labels:
-    app.kubernetes.io/name: {{ include "todolist-app.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- include "todolist-app.labels" . | nindent 4 }}
 data:
-  {{- range $k, $v := .Values.env }}
-  {{ $k }}: {{ $v | quote }}
+  {{- range $key, $value := .Values.env }}
+  {{ $key }}: {{ $value | quote }}
   {{- end }}

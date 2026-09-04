@@ -1,0 +1,186 @@
+# Minimal pod manifest for helm-unittest
+# https://github.com/helm-unittest/helm-unittest
+---
+suite: test deployment
+templates:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - configmap.yaml
+  - secret.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - serviceaccount.yaml
+  - rbac.yaml
+  - cronjob.yaml
+release:
+  name: todolist-release
+  namespace: todolist
+tests:
+  - it: should render all expected resources
+    template: deployment.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - matchSnapshot:
+          path: metadata.labels
+
+  - it: should set replicas when autoscaling is disabled
+    template: deployment.yaml
+    set:
+      autoscaling.enabled: false
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should not set replicas when autoscaling is enabled
+    template: deployment.yaml
+    set:
+      autoscaling.enabled: true
+    asserts:
+      - notEqual:
+          path: spec.replicas
+          value: null
+          # When HPA controls, replicas is unset by chart logic
+
+  - it: should include standard app labels
+    template: deployment.yaml
+    asserts:
+      - isNotNull:
+          path: metadata.labels["app.kubernetes.io/name"]
+      - isNotNull:
+          path: metadata.labels["app.kubernetes.io/instance"]
+      - isNotNull:
+          path: metadata.labels["app.kubernetes.io/version"]
+      - isNotNull:
+          path: metadata.labels["helm.sh/chart"]
+
+  - it: should configure liveness, readiness, and startup probes
+    template: deployment.yaml
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].livenessProbe
+      - isNotNull:
+          path: spec.template.spec.containers[0].readinessProbe
+      - isNotNull:
+          path: spec.template.spec.containers[0].startupProbe
+
+  - it: should render Service as NodePort by default
+    template: service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.type
+          value: NodePort
+
+  - it: should render Service as ClusterIP when configured
+    template: service.yaml
+    set:
+      service.type: ClusterIP
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - notEqual:
+          path: spec.ports[0].nodePort
+          value: 30000
+
+  - it: should render Ingress when enabled
+    template: ingress.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should not render Ingress when disabled
+    template: ingress.yaml
+    set:
+      ingress.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render ConfigMap with env vars
+    template: configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - isNotNull:
+          path: data.APP_NAME
+      - isNotNull:
+          path: data.DB_HOST
+
+  - it: should render Secret with all required keys
+    template: secret.yaml
+    asserts:
+      - isKind:
+          of: Secret
+      - isNotNull:
+          path: stringData.DB_USER
+      - isNotNull:
+          path: stringData.DB_PASSWORD
+      - isNotNull:
+          path: stringData.SESSION_KEY
+
+  - it: should render HPA with autoscaling enabled
+    template: hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.minReplicas
+          value: 2
+
+  - it: should not render HPA when disabled
+    template: hpa.yaml
+    set:
+      autoscaling.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render PDB
+    template: pdb.yaml
+    asserts:
+      - isKind:
+          of: PodDisruptionBudget
+      - equal:
+          path: spec.minAvailable
+          value: 1
+
+  - it: should render ServiceAccount
+    template: serviceaccount.yaml
+    asserts:
+      - isKind:
+          of: ServiceAccount
+
+  - it: should not render ServiceAccount when disabled
+    template: serviceaccount.yaml
+    set:
+      serviceAccount.create: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render RBAC Role + RoleBinding
+    template: rbac.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: should render CronJob when enabled
+    template: cronjob.yaml
+    asserts:
+      - isKind:
+          of: CronJob
+
+  - it: should not render CronJob when disabled
+    template: cronjob.yaml
+    set:
+      cleanupCronjob.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

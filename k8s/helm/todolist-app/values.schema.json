@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Todolist App Helm Values Schema",
+  "type": "object",
+  "required": ["image", "replicaCount", "service", "env", "secrets"],
+  "properties": {
+    "nameOverride": { "type": "string" },
+    "fullnameOverride": { "type": "string" },
+    "commonLabels": { "type": "object", "additionalProperties": { "type": "string" } },
+    "image": {
+      "type": "object",
+      "required": ["repository", "pullPolicy"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string" },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
+        "pullSecrets": { "type": "array", "items": { "type": "object", "required": ["name"], "properties": { "name": { "type": "string" } } } }
+      },
+      "additionalProperties": false
+    },
+    "replicaCount": { "type": "integer", "minimum": 1 },
+    "serviceAccount": {
+      "type": "object",
+      "properties": {
+        "create": { "type": "boolean" },
+        "name": { "type": "string" },
+        "annotations": { "type": "object" }
+      }
+    },
+    "service": {
+      "type": "object",
+      "required": ["port", "targetPort"],
+      "properties": {
+        "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer", "ExternalName"] },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "targetPort": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "nodePort": { "type": "integer", "minimum": 30000, "maximum": 32767 }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "className": { "type": "string" },
+        "annotations": { "type": "object", "additionalProperties": { "type": "string" } },
+        "hosts": { "type": "array" },
+        "tls": { "type": "array" }
+      }
+    },
+    "autoscaling": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "minReplicas": { "type": "integer", "minimum": 1 },
+        "maxReplicas": { "type": "integer", "minimum": 1 },
+        "targetCPUUtilizationPercentage": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "targetMemoryUtilizationPercentage": { "type": "integer", "minimum": 1, "maximum": 100 }
+      }
+    },
+    "podDisruptionBudget": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "minAvailable": { "type": "integer" },
+        "maxUnavailable": { "type": "integer" }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "limits": { "type": "object", "additionalProperties": { "type": "string" } },
+        "requests": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "probes": {
+      "type": "object",
+      "properties": {
+        "liveness": { "type": "object", "properties": { "path": { "type": "string" }, "initialDelaySeconds": { "type": "integer" }, "periodSeconds": { "type": "integer" }, "timeoutSeconds": { "type": "integer" }, "failureThreshold": { "type": "integer" } } },
+        "readiness": { "type": "object" },
+        "startup": { "type": "object" }
+      }
+    },
+    "env": { "type": "object", "additionalProperties": { "type": "string" } },
+    "secrets": {
+      "type": "object",
+      "required": ["dbUser", "dbPassword"],
+      "properties": {
+        "dbUser": { "type": "string" },
+        "dbPassword": { "type": "string" },
+        "sessionKey": { "type": "string" },
+        "adminUser": { "type": "string" },
+        "adminPassword": { "type": "string" },
+        "cleanupToken": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "cleanupCronjob": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "schedule": { "type": "string" },
+        "image": { "type": "object", "properties": { "repository": { "type": "string" }, "tag": { "type": "string" } } }
+      }
+    }
+  }
+}

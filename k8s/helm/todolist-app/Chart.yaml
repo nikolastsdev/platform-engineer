@@ -1,6 +1,17 @@
 apiVersion: v2
 name: todolist-app
-description: A Helm chart para o todolist-app (Flask + PostgreSQL) no kind
+description: A Helm chart for the TodoList Flask application with PostgreSQL, following Kubernetes best practices.
 type: application
-version: 0.1.0
-appVersion: "1.0.0"
+version: 1.0.0
+appVersion: "2.0.0"
+dependencies: []
+keywords:
+  - flask
+  - todolist
+  - postgresql
+  - api
+maintainers:
+  - name: Nikolas Schaffer
+    email: nikolatsdev@users.noreply.github.com
+sources:
+  - https://github.com/nikolastsdev/platform-engineer
