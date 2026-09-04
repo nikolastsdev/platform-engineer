@@ -78,11 +78,33 @@ resource "null_resource" "install_ingress" {
   }
 }
 
+resource "null_resource" "fix_ingress_to_controlplane" {
+  depends_on = [null_resource.install_ingress]
+  triggers = {
+    always_run = timestamp()
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      export KUBECONFIG="${local.kubeconfig}"
+      echo "==> Force ingress-nginx to run on control-plane with hostNetwork..."
+      kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type='json' -p='[
+        {"op":"replace","path":"/spec/template/spec/hostNetwork","value":true},
+        {"op":"replace","path":"/spec/template/spec/dnsPolicy","value":"ClusterFirstWithHostNet"},
+        {"op":"add","path":"/spec/template/spec/nodeSelector","value":{"node-role.kubernetes.io/control-plane":""}},
+        {"op":"add","path":"/spec/template/spec/tolerations","value":[{"operator":"Exists","key":"node-role.kubernetes.io/control-plane","effect":"NoSchedule"},{"operator":"Exists","key":"node-role.kubernetes.io/master","effect":"NoSchedule"}]}
+      ]' || true
+      echo "==> Ingress patch OK"
+    EOT
+  }
+}
+
 # ------------------------------------------------------------------------------
 # Metrics Server (requerido pelo HPA)
 # ------------------------------------------------------------------------------
 resource "null_resource" "install_metrics_server" {
-  depends_on = [null_resource.install_ingress]
+  depends_on = [null_resource.fix_ingress_to_controlplane]
 
   provisioner "local-exec" {
     command = <<-EOT
