@@ -1,74 +1,58 @@
 #!/bin/bash
 # ==============================================================================
-# Script de pós-provisionamento — aplica secrets e configurações ad-hoc
-# Rodar APÓS: kind create cluster + helm installs (make create / terraform apply)
+# Bootstrap — setup do repo GitOps para GitOps de verdade (NENHUM kubectl apply)
+# Fonte de verdade: https://github.com/nikolastsdev/platform-engineer  path: k8s/base/
+# ArgoCD sincroniza tudo automaticamente (selfHeal=true, prune=true)
 # ==============================================================================
 set -e
 
-KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-todolist-platform.conf}"
-export KUBECONFIG
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 
-echo "==> Pós-provisionamento Kind + ArgoCD"
+echo "==> GitOps Bootstrap — fonte: platform-engineer/k8s/base/"
+echo "==> NENHUM kubectl apply — tudo via ArgoCD"
 
-# 1. GHCR Pull Secret (necessário para pods puxarem imagem do GHCR)
-echo "==> Criando secret ghcr-pull..."
+# 1. Verificar gh auth
+echo "==> Verificando gh auth..."
 GH_TOKEN=$(gh auth token 2>/dev/null)
 if [ -z "$GH_TOKEN" ]; then
-  echo "ERRO: gh auth token não disponível. Faça 'gh auth login' primeiro."
+  echo "ERRO: 'gh auth login' necessário."
   exit 1
 fi
+echo "OK — token: ${GH_TOKEN:0:8}..."
+
+# 2. Gerar ghcr-pull-secret.yaml com token real (vai pro repo)
+echo "==> Gerando k8s/base/ghcr-pull-secret.yaml..."
+cd "$REPO_ROOT"
 kubectl create secret docker-registry ghcr-pull \
+  --namespace=todolist \
   --docker-server=ghcr.io \
   --docker-username=nikolastsdev \
   --docker-password="$GH_TOKEN" \
-  --namespace=todolist 2>/dev/null || kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ghcr-pull
-  namespace: todolist
-type: kubernetes.io/dockerconfigjson
-data:
-  .dockerconfigjson: $(echo -n "{\"auths\":{\"ghcr.io\":{\"auth\":\"$(echo -n "nikolastsdev:$GH_TOKEN" | base64 -w0)\"}}}" | base64 -w0)
-EOF
+  --dry-run=client -o yaml > k8s/base/ghcr-pull-secret.yaml
 
-# 2. ArgoCD Repo Git Credentials
-echo "==> Criando secret argocd-repo-nikolastsdev..."
-kubectl create secret generic argocd-repo-nikolastsdev \
+# 3. Atualizar argocd-repo para platform-engineer (se existir)
+echo "==> Atualizando ArgoCD repo credentials (platform-engineer)..."
+KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-todolist-platform.conf}"
+export KUBECONFIG
+
+kubectl create secret generic argocd-repo-platform-engineer \
   --namespace=argocd \
   --type=Opaque \
   --from-literal=type=git \
-  --from-literal=url=https://github.com/nikolastsdev/argo-test-manifests \
+  --from-literal=url=https://github.com/nikolastsdev/platform-engineer \
   --from-literal=username=nikolastsdev \
   --from-literal=password="$GH_TOKEN" \
-  2>/dev/null || kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: argocd-repo-nikolastsdev
-  namespace: argocd
-  labels:
-    argocd.argoproj.io/secret-type: repository
-type: Opaque
-data:
-  type: $(echo -n git | base64 -w0)
-  url: $(echo -n https://github.com/nikolastsdev/argo-test-manifests | base64 -w0)
-  username: $(echo -n nikolastsdev | base64 -w0)
-  password: $(echo -n "$GH_TOKEN" | base64 -w0)
-EOF
-kubectl label secret argocd-repo-nikolastsdev \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl label secret argocd-repo-platform-engineer \
   --namespace=argocd \
   argocd.argoproj.io/secret-type=repository \
   --overwrite 2>/dev/null || true
 
-# 3. Restart ArgoCD repo-server e application-controller para ler o secret
-echo "==> Reiniciando ArgoCD controllers..."
-kubectl rollout restart deployment argocd-repo-server -n argocd 2>/dev/null || true
-kubectl rollout restart statefulset argocd-application-controller -n argocd 2>/dev/null || true
-
-# 4. Criar Application ArgoCD
-echo "==> Criando ArgoCD Application todolist-app..."
-kubectl apply -f - <<EOF
+# 4. Atualizar ArgoCD Application para platform-engineer
+echo "==> Atualizando ArgoCD Application (repo=platform-engineer)..."
+kubectl apply -f - <<'EOF'
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -77,7 +61,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/nikolastsdev/argo-test-manifests
+    repoURL: https://github.com/nikolastsdev/platform-engineer
     path: k8s/base
     targetRevision: HEAD
   destination:
@@ -88,37 +72,25 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-    - CreateNamespace=true
+      - CreateNamespace=true
 EOF
 
-# 5. Service NodePort do todolist (porta 5000 -> containerPort 30000 no Kind)
-echo "==> Criando service todolist NodePort 30000..."
-kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Service
-metadata:
-  name: todolist
-  namespace: todolist
-spec:
-  type: NodePort
-  ports:
-  - name: http
-    port: 5000
-    targetPort: 5000
-    nodePort: 30000
-  selector:
-    app: todolist
-EOF
+# 5. Git add + push (manifests + secret vao pro remote)
+echo "==> Commitando e pushando para platform-engineer..."
+git add k8s/base/
+git commit -m "chore: ghcr-pull-secret + GitOps source of truth (platform-engineer)" || true
+git push origin main
 
-echo "==> Aguardando pods..."
-sleep 30
+# 6. Aguardar ArgoCD sync
+echo "==> Aguardando ArgoCD sincronizar (60s)..."
+sleep 60
+
+# 7. Status
 echo ""
 echo "==> STATUS:"
-kubectl get pods -n todolist 2>/dev/null | grep -v Completed
-kubectl get pods -n argocd 2>/dev/null | grep -v Completed
+kubectl get pods -n todolist 2>/dev/null | grep -v Completed || echo "pods em criação..."
 echo ""
-echo "==> ACESSO:"
-echo "   App:       http://localhost:5000"
-echo "   ArgoCD:    https://localhost:8080"
-echo "   ArgoCD user: admin"
-echo "   ArgoCD pass: $(kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d 2>/dev/null)"
+echo "==> ArgoCD Application:"
+kubectl get application todolist-app -n argocd -o jsonpath='repoURL={.spec.source.repoURL} path={.spec.source.path} sync={.status.sync.status}{"\n"}' 2>/dev/null || true
+echo ""
+echo "==> ACESSO: http://localhost:5000/ (Kind nodePort 30000->5000)"
