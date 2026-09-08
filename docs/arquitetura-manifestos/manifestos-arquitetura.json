@@ -2,30 +2,32 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Arquitetura de Manifestos YAML — Final",
-    "quality_profile": "showcase",
-    "subtitle": "Helm chart como fonte única (GitOps) — Terraform só provisiona o cluster"
+    "title": "Arquitetura — Platform Engineer",
+    "subtitle": "Helm chart fonte unica · Terraform bootstrap · CI · GitOps",
+    "quality_profile": "standard"
   },
+  "layout": { "mode": "grid", "cols": 4, "gapX": 30, "gapY": 20, "cellW": 140, "cellH": 60 },
   "components": [
-    { "id": "gitrepo", "type": "cloud", "label": "Repo Git", "sublabel": "platform-engineer (fonte da verdade)", "pos": [40, 40], "size": [170, 70] },
-    { "id": "helm", "type": "database", "label": "k8s/helm/todolist-app", "sublabel": "Chart único — 13 templates + values", "pos": [300, 40], "size": [190, 70], "tag": "fonte única" },
-    { "id": "argocd", "type": "messagebus", "label": "ArgoCD", "sublabel": "GitOps sync (selfHeal + prune)", "pos": [40, 250], "size": [150, 70] },
-    { "id": "cluster", "type": "backend", "label": "Kind Cluster", "sublabel": "namespaces · app · postgres · cron", "pos": [300, 250], "size": [190, 80] },
-    { "id": "terraform", "type": "backend", "label": "Terraform", "sublabel": "bootstrap — cluster + ArgoCD", "pos": [580, 40], "size": [220, 80] }
-  ],
-  "boundaries": [
-    { "kind": "region", "label": "GitOps — repo é a fonte da verdade", "wraps": ["gitrepo", "helm"] },
-    { "kind": "region", "label": "Bootstrap (infra local)", "wraps": ["terraform"] }
+    {"id":"gitrepo","type":"cloud","label":"Repo Git","sublabel":"fonte da verdade","row":0,"col":0,"pos":[20,20],"size":[120,50]},
+    {"id":"helm","type":"database","label":"Helm chart","sublabel":"13 templates","row":0,"col":1,"pos":[170,20],"size":[120,50]},
+    {"id":"argocd","type":"messagebus","label":"ArgoCD","sublabel":"GitOps sync","row":0,"col":2,"pos":[320,20],"size":[120,50]},
+    {"id":"ci","type":"external","label":"CI","sublabel":"GitHub Actions","row":0,"col":3,"pos":[470,20],"size":[120,50]},
+    {"id":"terraform","type":"backend","label":"Terraform","sublabel":"bootstrap","row":1,"col":0,"pos":[20,100],"size":[120,50]},
+    {"id":"cluster","type":"backend","label":"Kind Cluster","sublabel":"4 nodes","row":1,"col":1,"pos":[170,100],"size":[120,50]},
+    {"id":"postgres","type":"database","label":"PostgreSQL","sublabel":"todolist-db","row":1,"col":2,"pos":[320,100],"size":[120,50]},
+    {"id":"app","type":"frontend","label":"todolist-app","sublabel":"2/2 Running","row":1,"col":3,"pos":[470,100],"size":[120,50]}
   ],
   "connections": [
-    { "id": "push", "from": "gitrepo", "to": "helm", "label": "push/chart" },
-    { "id": "sync", "from": "argocd", "to": "helm", "label": "sync", "labelDy": -16 },
-    { "id": "apply", "from": "argocd", "to": "cluster", "label": "apply", "labelDy": 18 },
-    { "id": "bootstrap", "from": "terraform", "to": "cluster", "label": "provisiona", "variant": "dashed" }
+    {"id":"push","from":"gitrepo","to":"helm","label":"push"},
+    {"id":"sync","from":"argocd","to":"helm","label":"sync"},
+    {"id":"apply","from":"argocd","to":"cluster","label":"apply"},
+    {"id":"boot","from":"terraform","to":"cluster","label":"bootstrap","variant":"dashed"},
+    {"id":"promote","from":"ci","to":"helm","label":"promove"},
+    {"id":"db","from":"postgres","to":"cluster","label":"db"},
+    {"id":"deploy","from":"app","to":"cluster","label":"deploy","labelDy":44}
   ],
   "cards": [
-    { "dot": "cyan", "title": "Fonte Única (GitOps)", "items": ["Helm chart declara todos os recursos", "k8s/base/ e k8s/infra/ removidos", "ArgoCD aponta para k8s/helm/todolist-app"] },
-    { "dot": "emerald", "title": "Camadas no chart", "items": ["namespace → database → app → network → cleanup", "values.yaml parametriza tudo (imagem, réplicas, secrets)", "values.schema.json valida entradas"] },
-    { "dot": "rose", "title": "Terraform = bootstrap", "items": ["Provisiona cluster + ArgoCD + credenciais", "Cria ghcr-pull (PAT local, nunca vai pro Git)", "Recursos declarativos só no Helm"] }
+    {"dot":"cyan","title":"GitOps (fonte unica)","items":["Helm chart = unica fonte de recursos","ArgoCD = sync selfHeal + prune","Repo = fonte da verdade"]},
+    {"dot":"rose","title":"Bootstrap + Pipeline","items":["Terraform = cluster + ArgoCD + credenciais","CI = promove tag no values.yaml","Postgres + App = recursos no chart"]}
   ]
 }

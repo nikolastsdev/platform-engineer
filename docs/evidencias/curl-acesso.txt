@@ -1,0 +1,3 @@
+GET http://localhost/            -> HTTP 302 (redirect /login)
+GET http://localhost/login       -> HTTP 200
+GET https://localhost/ (ArgoCD)  -> HTTP 200

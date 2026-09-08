@@ -1,0 +1,279 @@
+terraform -chdir=terraform init
+[0m[1mInitializing the backend...[0m
+[0m[32m
+Successfully configured the backend "local"! Terraform will automatically
+use this backend unless the backend configuration changes.[0m
+[0m[1mInitializing provider plugins...[0m
+- Finding hashicorp/null versions matching "~> 3.2"...
+- Installing hashicorp/null v3.3.1...
+- Installed hashicorp/null v3.3.1 (signed by HashiCorp)
+Terraform has created a lock file [1m.terraform.lock.hcl[0m to record the provider
+selections it made above. Include this file in your version control repository
+so that Terraform can guarantee to make the same selections by default when
+you run "terraform init" in the future.[0m
+
+[0m[1m[32mTerraform has been successfully initialized![0m[32m[0m
+[0m[32m
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.[0m
+terraform -chdir=terraform apply -auto-approve
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [32m+[0m create[0m
+
+Terraform will perform the following actions:
+
+[1m  # null_resource.argocd_app_todolist[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "argocd_app_todolist" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1m  # null_resource.argocd_repo_credentials[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "argocd_repo_credentials" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1m  # null_resource.create_kind_cluster[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "create_kind_cluster" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1m  # null_resource.create_namespaces[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "create_namespaces" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1m  # null_resource.install_argocd[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "install_argocd" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1m  # null_resource.install_ingress[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "install_ingress" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1m  # null_resource.install_metrics_server[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "install_metrics_server" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1mPlan:[0m 7 to add, 0 to change, 0 to destroy.
+[0m
+Changes to Outputs:
+  [32m+[0m[0m app_namespace     = "todolist"
+  [32m+[0m[0m app_url           = "http://localhost"
+  [32m+[0m[0m argocd_namespace  = "argocd"
+  [32m+[0m[0m argocd_password   = "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
+  [32m+[0m[0m argocd_url        = "kubectl -n argocd port-forward svc/argocd-server 8080:443  ->  https://localhost:8080"
+  [32m+[0m[0m cluster_name      = "todolist-platform"
+  [32m+[0m[0m ingress_http_port = 80
+  [32m+[0m[0m kubeconfig_path   = "~/.kube/kind-todolist-platform.conf"
+[0m[1mnull_resource.create_kind_cluster: Creating...[0m[0m
+[0m[1mnull_resource.create_kind_cluster: Provisioning with 'local-exec'...[0m[0m
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0mExecuting: ["/bin/sh" "-c" "set -e\nmkdir -p \"$(dirname \"/tmp/kube-kind/kind-todolist-platform.conf\")\"\necho \"==> Criando cluster kind 'todolist-platform' (config: kind-config.yaml)...\"\nkind create cluster \\\n  --config \"./kind-config.yaml\" \\\n  --kubeconfig \"/tmp/kube-kind/kind-todolist-platform.conf\" \\\n  --wait 300s\necho \"==> Cluster kind OK (nodes: $(kind get nodes --name todolist-platform | tr '\\n' ' '))\"\n"]
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m==> Criando cluster kind 'todolist-platform' (config: kind-config.yaml)...
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0mCreating cluster "todolist-platform" ...
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m • Ensuring node image (kindest/node:v1.30.0) 🖼  ...
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m ✓ Ensuring node image (kindest/node:v1.30.0) 🖼
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m • Preparing nodes 📦 📦 📦 📦   ...
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m ✓ Preparing nodes 📦 📦 📦 📦
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m • Writing configuration 📜  ...
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m ✓ Writing configuration 📜
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m • Starting control-plane 🕹️  ...
+[0m[1mnull_resource.create_kind_cluster: Still creating... [00m10s elapsed][0m[0m
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m ✓ Starting control-plane 🕹️
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m • Installing CNI 🔌  ...
+[0m[1mnull_resource.create_kind_cluster: Still creating... [00m20s elapsed][0m[0m
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m ✓ Installing CNI 🔌
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m • Installing StorageClass 💾  ...
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m ✓ Installing StorageClass 💾
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m • Joining worker nodes 🚜  ...
+[0m[1mnull_resource.create_kind_cluster: Still creating... [00m33s elapsed][0m[0m
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m ✓ Joining worker nodes 🚜
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m • Waiting ≤ 5m0s for control-plane = Ready ⏳  ...
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m ✓ Waiting ≤ 5m0s for control-plane = Ready ⏳
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m • Ready after 0s 💚
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0mSet kubectl context to "kind-todolist-platform"
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0mYou can now use your cluster with:
+
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0mkubectl cluster-info --context kind-todolist-platform --kubeconfig /tmp/kube-kind/kind-todolist-platform.conf
+
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0mNot sure what to do next? 😅  Check out https://kind.sigs.k8s.io/docs/user/quick-start/
+[0m[1mnull_resource.create_kind_cluster (local-exec):[0m [0m==> Cluster kind OK (nodes: todolist-platform-worker3 todolist-platform-worker todolist-platform-worker2 todolist-platform-control-plane )
+[0m[1mnull_resource.create_kind_cluster: Creation complete after 43s [id=2517680131212664120][0m
+[0m[1mnull_resource.install_ingress: Creating...[0m[0m
+[0m[1mnull_resource.install_ingress: Provisioning with 'local-exec'...[0m[0m
+[0m[1mnull_resource.install_ingress (local-exec):[0m [0mExecuting: ["/bin/sh" "-c" "set -e\nexport KUBECONFIG=\"/tmp/kube-kind/kind-todolist-platform.conf\"\necho \"==> Instalando NGINX Ingress Controller (no control-plane com hostNetwork)...\"\nhelm upgrade --install ingress-nginx ingress-nginx \\\n  --namespace ingress-nginx --create-namespace \\\n  --repo https://kubernetes.github.io/ingress-nginx \\\n  --version 4.11.2 \\\n  --set controller.replicaCount=1 \\\n  --set controller.kind=DaemonSet \\\n  --set controller.service.type=NodePort \\\n  --set controller.hostNetwork=true \\\n  --set controller.dnsPolicy=ClusterFirstWithHostNet \\\n  --set controller.nodeSelector.node-role\\\\.kubernetes\\\\.io/control-plane=\"\" \\\n  --set controller.tolerations[0].operator=Exists \\\n  --set controller.publishService.enabled=true \\\n  --wait --timeout 300s > /dev/null 2>&1\necho \"==> NGINX Ingress OK (control-plane + hostNetwork)\"\n"]
+[0m[1mnull_resource.install_ingress (local-exec):[0m [0m==> Instalando NGINX Ingress Controller (no control-plane com hostNetwork)...
+[31m╷[0m[0m
+[31m│[0m [0m[1m[31mError: [0m[0m[1mlocal-exec provisioner error[0m
+[31m│[0m [0m
+[31m│[0m [0m[0m  with null_resource.install_ingress,
+[31m│[0m [0m  on main.tf line 45, in resource "null_resource" "install_ingress":
+[31m│[0m [0m  45:   provisioner "local-exec" [4m{[0m[0m
+[31m│[0m [0m
+[31m│[0m [0mError running command 'set -e
+[31m│[0m [0mexport KUBECONFIG="/tmp/kube-kind/kind-todolist-platform.conf"
+[31m│[0m [0mecho "==> Instalando NGINX Ingress Controller (no control-plane com
+[31m│[0m [0mhostNetwork)..."
+[31m│[0m [0mhelm upgrade --install ingress-nginx ingress-nginx \
+[31m│[0m [0m  --namespace ingress-nginx --create-namespace \
+[31m│[0m [0m  --repo https://kubernetes.github.io/ingress-nginx \
+[31m│[0m [0m  --version 4.11.2 \
+[31m│[0m [0m  --set controller.replicaCount=1 \
+[31m│[0m [0m  --set controller.kind=DaemonSet \
+[31m│[0m [0m  --set controller.service.type=NodePort \
+[31m│[0m [0m  --set controller.hostNetwork=true \
+[31m│[0m [0m  --set controller.dnsPolicy=ClusterFirstWithHostNet \
+[31m│[0m [0m  --set controller.nodeSelector.node-role\\.kubernetes\\.io/control-plane="" \
+[31m│[0m [0m  --set controller.tolerations[0].operator=Exists \
+[31m│[0m [0m  --set controller.publishService.enabled=true \
+[31m│[0m [0m  --wait --timeout 300s > /dev/null 2>&1
+[31m│[0m [0mecho "==> NGINX Ingress OK (control-plane + hostNetwork)"
+[31m│[0m [0m': exit status 1. Output: ==> Instalando NGINX Ingress Controller (no
+[31m│[0m [0mcontrol-plane com hostNetwork)...
+[31m│[0m [0m
+[31m╵[0m[0m
+make: *** [Makefile:20: create] Error 1
+terraform -chdir=terraform init
+[0m[1mInitializing the backend...[0m
+[0m[1mInitializing provider plugins...[0m
+- Reusing previous version of hashicorp/null from the dependency lock file
+- Using previously-installed hashicorp/null v3.3.1
+
+[0m[1m[32mTerraform has been successfully initialized![0m[32m[0m
+[0m[32m
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.[0m
+terraform -chdir=terraform apply -auto-approve
+[0m[1mnull_resource.create_kind_cluster: Refreshing state... [id=2517680131212664120][0m
+[0m[1mnull_resource.install_ingress: Refreshing state... [id=7195685611571406310][0m
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [32m+[0m create[0m
+[31m-[0m/[32m+[0m destroy and then create replacement[0m
+
+Terraform will perform the following actions:
+
+[1m  # null_resource.argocd_app_todolist[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "argocd_app_todolist" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1m  # null_resource.argocd_repo_credentials[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "argocd_repo_credentials" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1m  # null_resource.create_namespaces[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "create_namespaces" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1m  # null_resource.install_argocd[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "install_argocd" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1m  # null_resource.install_ingress[0m is tainted, so must be [1m[31mreplaced[0m
+[0m[31m-[0m/[32m+[0m[0m resource "null_resource" "install_ingress" {
+      [33m~[0m[0m id = "7195685611571406310" -> (known after apply)
+    }
+
+[1m  # null_resource.install_metrics_server[0m will be created
+[0m  [32m+[0m[0m resource "null_resource" "install_metrics_server" {
+      [32m+[0m[0m id = (known after apply)
+    }
+
+[1mPlan:[0m 6 to add, 0 to change, 1 to destroy.
+[0m[0m[1mnull_resource.install_ingress: Destroying... [id=7195685611571406310][0m[0m
+[0m[1mnull_resource.install_ingress: Destruction complete after 0s[0m
+[0m[1mnull_resource.install_ingress: Creating...[0m[0m
+[0m[1mnull_resource.install_ingress: Provisioning with 'local-exec'...[0m[0m
+[0m[1mnull_resource.install_ingress (local-exec):[0m [0mExecuting: ["/bin/sh" "-c" "set -e\nexport KUBECONFIG=\"/tmp/kube-kind/kind-todolist-platform.conf\"\necho \"==> Instalando NGINX Ingress Controller (no control-plane com hostNetwork)...\"\nhelm upgrade --install ingress-nginx ingress-nginx \\\n  --namespace ingress-nginx --create-namespace \\\n  --repo https://kubernetes.github.io/ingress-nginx \\\n  --version 4.11.2 \\\n  --set controller.replicaCount=1 \\\n  --set controller.kind=DaemonSet \\\n  --set controller.service.type=NodePort \\\n  --set controller.hostNetwork=true \\\n  --set controller.dnsPolicy=ClusterFirstWithHostNet \\\n  --set-json 'controller.nodeSelector={\"node-role.kubernetes.io/control-plane\": \"\"}' \\\n  --set controller.tolerations[0].operator=Exists \\\n  --set controller.publishService.enabled=true \\\n  --wait --timeout 300s > /dev/null 2>&1\necho \"==> NGINX Ingress OK (control-plane + hostNetwork)\"\n"]
+[0m[1mnull_resource.install_ingress (local-exec):[0m [0m==> Instalando NGINX Ingress Controller (no control-plane com hostNetwork)...
+[0m[1mnull_resource.install_ingress: Still creating... [00m13s elapsed][0m[0m
+[0m[1mnull_resource.install_ingress (local-exec):[0m [0m==> NGINX Ingress OK (control-plane + hostNetwork)
+[0m[1mnull_resource.install_ingress: Creation complete after 18s [id=7320215461530643907][0m
+[0m[1mnull_resource.install_metrics_server: Creating...[0m[0m
+[0m[1mnull_resource.install_argocd: Creating...[0m[0m
+[0m[1mnull_resource.install_argocd: Provisioning with 'local-exec'...[0m[0m
+[0m[1mnull_resource.install_argocd (local-exec):[0m [0mExecuting: ["/bin/sh" "-c" "set -e\nexport KUBECONFIG=\"/tmp/kube-kind/kind-todolist-platform.conf\"\necho \"==> Instalando ArgoCD...\"\nhelm upgrade --install argocd argo-cd \\\n  --namespace argocd --create-namespace \\\n  --repo https://argoproj.github.io/argo-helm \\\n  --version 7.4.0 \\\n  --set configs.params.server.insecure=true \\\n  --set server.service.type=NodePort \\\n  --set server.service.nodePorts.https=30080 \\\n  --wait --timeout 300s > /dev/null 2>&1\necho \"==> ArgoCD OK\"\n"]
+[0m[1mnull_resource.install_metrics_server: Provisioning with 'local-exec'...[0m[0m
+[0m[1mnull_resource.install_metrics_server (local-exec):[0m [0mExecuting: ["/bin/sh" "-c" "set -e\nexport KUBECONFIG=\"/tmp/kube-kind/kind-todolist-platform.conf\"\necho \"==> Instalando Metrics Server...\"\nhelm upgrade --install metrics-server metrics-server \\\n  --namespace kube-system \\\n  --repo https://kubernetes-sigs.github.io/metrics-server \\\n  --version 3.12.1 \\\n  --set args[0]=\"--kubelet-insecure-tls\" \\\n  --set args[1]=\"--kubelet-preferred-address-types=InternalIP\" \\\n  --wait --timeout 120s > /dev/null 2>&1\necho \"==> Metrics Server OK\"\n"]
+[0m[1mnull_resource.install_metrics_server (local-exec):[0m [0m==> Instalando Metrics Server...
+[0m[1mnull_resource.install_argocd (local-exec):[0m [0m==> Instalando ArgoCD...
+[0m[1mnull_resource.install_argocd: Still creating... [00m10s elapsed][0m[0m
+[0m[1mnull_resource.install_metrics_server: Still creating... [00m10s elapsed][0m[0m
+[0m[1mnull_resource.install_argocd: Still creating... [00m20s elapsed][0m[0m
+[0m[1mnull_resource.install_metrics_server: Still creating... [00m20s elapsed][0m[0m
+[0m[1mnull_resource.install_metrics_server: Still creating... [00m33s elapsed][0m[0m
+[0m[1mnull_resource.install_argocd: Still creating... [00m33s elapsed][0m[0m
+[0m[1mnull_resource.install_metrics_server (local-exec):[0m [0m==> Metrics Server OK
+[0m[1mnull_resource.install_metrics_server: Creation complete after 37s [id=1649831069660690831][0m
+[0m[1mnull_resource.install_argocd: Still creating... [00m43s elapsed][0m[0m
+[0m[1mnull_resource.install_argocd: Still creating... [00m53s elapsed][0m[0m
+[0m[1mnull_resource.install_argocd: Still creating... [01m06s elapsed][0m[0m
+[0m[1mnull_resource.install_argocd: Still creating... [01m16s elapsed][0m[0m
+[0m[1mnull_resource.install_argocd (local-exec):[0m [0m==> ArgoCD OK
+[0m[1mnull_resource.install_argocd: Creation complete after 1m24s [id=3867156064043748143][0m
+[0m[1mnull_resource.create_namespaces: Creating...[0m[0m
+[0m[1mnull_resource.argocd_repo_credentials: Creating...[0m[0m
+[0m[1mnull_resource.create_namespaces: Provisioning with 'local-exec'...[0m[0m
+[0m[1mnull_resource.create_namespaces (local-exec):[0m [0mExecuting: ["/bin/sh" "-c" "      set -e\n      export KUBECONFIG=\"/tmp/kube-kind/kind-todolist-platform.conf\"\n      # Define o context do kind como current-context para kubectl funcionar direto\n      kubectl config set-current-context kind-todolist-platform --kubeconfig=\"/tmp/kube-kind/kind-todolist-platform.conf\" 2>/dev/null || \\\n        kubectl config use-context kind-todolist-platform --kubeconfig=\"/tmp/kube-kind/kind-todolist-platform.conf\" 2>/dev/null || true\n      echo \"==> Context setado: $(kubectl config current-context --kubeconfig=\"/tmp/kube-kind/kind-todolist-platform.conf\" 2>/dev/null || echo 'kind-todolist-platform')\"\n      echo \"==> Criando namespaces...\"\n      kubectl create namespace todolist --dry-run=client -o yaml | kubectl apply -f -\n      kubectl label namespace todolist app=todolist managed=terraform --overwrite\n      kubectl create namespace todolist-db --dry-run=client -o yaml | kubectl apply -f -\n      # Cria imagePullSecret ghcr-pull para baixar imagem do GHCR\n      # Usa python para gerar o .dockerconfigjson (evita erro de JSON vazio)\n      PAT=\"\"\n      if [ -n \"${GH_PAT}\" ]; then\n        PAT=\"${GH_PAT}\"\n      elif command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then\n        PAT=$(gh auth token 2>/dev/null || echo \"\")\n      fi\n      if [ -n \"$PAT\" ]; then\n        echo \"==> Criando imagePullSecret ghcr-pull...\"\n        python3 -c \"\nimport json, base64, sys\npat = sys.argv[1]\nconfig = {'auths': {'ghcr.io': {'username': 'nikolastsdev', 'auth': base64.b64encode(f'nikolastsdev:{pat}'.encode()).decode()}}}\ndata = base64.b64encode(json.dumps(config).encode()).decode()\nprint('apiVersion: v1')\nprint('kind: Secret')\nprint('metadata:')\nprint('  namespace: todolist')\nprint('  name: ghcr-pull')\nprint('type: kubernetes.io/dockerconfigjson')\nprint('data:')\nprint('  .dockerconfigjson: ' + data)\n\" \"$PAT\" | kubectl apply -f -\n        kubectl annotate secret ghcr-pull --namespace=todolist argocd.argoproj.io/ignore=true --overwrite 2>/dev/null || true\n      fi\n      echo \"==> Namespaces OK\"\n"]
+[0m[1mnull_resource.argocd_repo_credentials: Provisioning with 'local-exec'...[0m[0m
+[0m[1mnull_resource.argocd_repo_credentials (local-exec):[0m [0mExecuting: ["/bin/sh" "-c" "set -e\nexport KUBECONFIG=\"/tmp/kube-kind/kind-todolist-platform.conf\"\nif ! command -v gh >/dev/null 2>&1; then\n  echo \"gh CLI não instalado, pulando credencial ArgoCD\"\n  exit 0\nfi\nif ! gh auth status >/dev/null 2>&1; then\n  echo \"gh CLI não autenticado, pulando credencial ArgoCD\"\n  exit 0\nfi\n# Usa token do env GH_PAT (se configurado pelo usuário via gh auth login)\n# Se não houver token, cria com url apenas (funciona para repos públicos)\nif [ -n \"${GH_PAT}\" ]; then\n  PAT=\"${GH_PAT}\"\nelif command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then\n  PAT=$(gh auth token)\nelse\n  echo \"AVISO: Sem token GHCR/GitHub. Criando secret sem password. O ArgoCD pode falhar para repo privado.\"\n  PAT=\"\"\nfi\nkubectl create secret generic argocd-repo-nikolastsdev \\\n  --namespace=argocd \\\n  --type=Opaque \\\n  --from-literal=type=git \\\n  --from-literal=url=https://github.com/nikolastsdev/platform-engineer \\\n  --from-literal=username=nikolastsdev \\\n  --from-literal=password=\"$PAT\" \\\n  --dry-run=client -o yaml | kubectl apply -f -\nkubectl label secret argocd-repo-nikolastsdev \\\n  --namespace=argocd \\\n  argocd.argoproj.io/secret-type=repository \\\n  --overwrite\nkubectl -n argocd rollout restart deployment/argocd-repo-server >/dev/null 2>&1 || true\nkubectl -n argocd rollout restart statefulset/argocd-application-controller >/dev/null 2>&1 || true\necho \"==> Credencial ArgoCD OK\"\n"]
+[0m[1mnull_resource.create_namespaces (local-exec):[0m [0mSwitched to context "kind-todolist-platform".
+[0m[1mnull_resource.create_namespaces (local-exec):[0m [0m==> Context setado: kind-todolist-platform
+[0m[1mnull_resource.create_namespaces (local-exec):[0m [0m==> Criando namespaces...
+[0m[1mnull_resource.create_namespaces (local-exec):[0m [0mnamespace/todolist created
+[0m[1mnull_resource.create_namespaces (local-exec):[0m [0mnamespace/todolist labeled
+[0m[1mnull_resource.create_namespaces (local-exec):[0m [0mnamespace/todolist-db created
+[0m[1mnull_resource.argocd_repo_credentials (local-exec):[0m [0msecret/argocd-repo-nikolastsdev created
+[0m[1mnull_resource.create_namespaces (local-exec):[0m [0m==> Criando imagePullSecret ghcr-pull...
+[0m[1mnull_resource.argocd_repo_credentials (local-exec):[0m [0msecret/argocd-repo-nikolastsdev labeled
+[0m[1mnull_resource.create_namespaces (local-exec):[0m [0msecret/ghcr-pull created
+[0m[1mnull_resource.create_namespaces (local-exec):[0m [0msecret/ghcr-pull annotated
+[0m[1mnull_resource.create_namespaces (local-exec):[0m [0m==> Namespaces OK
+[0m[1mnull_resource.create_namespaces: Creation complete after 1s [id=3461562522005680880][0m
+[0m[1mnull_resource.argocd_repo_credentials (local-exec):[0m [0m==> Credencial ArgoCD OK
+[0m[1mnull_resource.argocd_repo_credentials: Creation complete after 1s [id=1505826238246006080][0m
+[0m[1mnull_resource.argocd_app_todolist: Creating...[0m[0m
+[0m[1mnull_resource.argocd_app_todolist: Provisioning with 'local-exec'...[0m[0m
+[0m[1mnull_resource.argocd_app_todolist (local-exec):[0m [0mExecuting: ["/bin/sh" "-c" "      set -e\n      export KUBECONFIG=\"/tmp/kube-kind/kind-todolist-platform.conf\"\n      kubectl apply -f - <<'EOF'\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: argocd-server\n  namespace: argocd\n  annotations:\n    nginx.ingress.kubernetes.io/backend-protocol: HTTPS\n    nginx.ingress.kubernetes.io/ssl-passthrough: \"true\"\nspec:\n  ingressClassName: nginx\n  rules:\n  - host: argocd.localhost\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: argocd-server\n            port:\n              number: 443\nEOF\n      echo \"==> ArgoCD Ingress OK\"\n      echo \"==> Criando ArgoCD Application...\"\n      kubectl apply -f - <<'EOF'\napiVersion: argoproj.io/v1alpha1\nkind: Application\nmetadata:\n  name: todolist-app\n  namespace: argocd\nspec:\n  project: default\n  source:\n    repoURL: https://github.com/nikolastsdev/platform-engineer\n    path: k8s/helm/todolist-app\n    targetRevision: HEAD\n  destination:\n    server: https://kubernetes.default.svc\n    namespace: todolist\n  syncPolicy:\n    automated:\n      prune: true\n      selfHeal: true\n    syncOptions:\n      - CreateNamespace=true\nEOF\n      echo \"==> ArgoCD Application OK\"\n"]
+[0m[1mnull_resource.argocd_app_todolist (local-exec):[0m [0mingress.networking.k8s.io/argocd-server created
+[0m[1mnull_resource.argocd_app_todolist (local-exec):[0m [0m==> ArgoCD Ingress OK
+[0m[1mnull_resource.argocd_app_todolist (local-exec):[0m [0m==> Criando ArgoCD Application...
+[0m[1mnull_resource.argocd_app_todolist (local-exec):[0m [0mapplication.argoproj.io/todolist-app created
+[0m[1mnull_resource.argocd_app_todolist (local-exec):[0m [0m==> ArgoCD Application OK
+[0m[1mnull_resource.argocd_app_todolist: Creation complete after 1s [id=5732264155758798070][0m
+[0m[1m[32m
+Apply complete! Resources: 6 added, 0 changed, 1 destroyed.
+[0m[0m[1m[32m
+Outputs:
+
+[0mapp_namespace = "todolist"
+app_url = "http://localhost"
+argocd_namespace = "argocd"
+argocd_password = "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
+argocd_url = "kubectl -n argocd port-forward svc/argocd-server 8080:443  ->  https://localhost:8080"
+cluster_name = "todolist-platform"
+ingress_http_port = 80
+kubeconfig_path = "~/.kube/kind-todolist-platform.conf"
+
+==> App:        http://localhost:8090 (port-forward) ou localhost:5000 (NodePort)/
+==> ArgoCD:     http://localhost:8080/  (user: admin | pass: make argocd-password)
+==> Kubeconfig: /tmp/kube-kind/kind-todolist-platform.conf

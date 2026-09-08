@@ -1,0 +1,39 @@
+# Evidências de execução — 2026-09-08 16:03
+
+## R1 — Cluster provisionado por código (kind 4 nodes)
+NAME                              STATUS   ROLES           AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                         KERNEL-VERSION                      CONTAINER-RUNTIME
+todolist-platform-control-plane   Ready    control-plane   7m23s   v1.30.0   172.24.0.5    <none>        Debian GNU/Linux 12 (bookworm)   6.18.33.2-microsoft-standard-WSL2   containerd://1.7.15
+todolist-platform-worker          Ready    <none>          6m59s   v1.30.0   172.24.0.3    <none>        Debian GNU/Linux 12 (bookworm)   6.18.33.2-microsoft-standard-WSL2   containerd://1.7.15
+todolist-platform-worker2         Ready    <none>          7m      v1.30.0   172.24.0.4    <none>        Debian GNU/Linux 12 (bookworm)   6.18.33.2-microsoft-standard-WSL2   containerd://1.7.15
+todolist-platform-worker3         Ready    <none>          7m      v1.30.0   172.24.0.2    <none>        Debian GNU/Linux 12 (bookworm)   6.18.33.2-microsoft-standard-WSL2   containerd://1.7.15
+
+## Recursos instalados por código (pods por namespace)
+NAMESPACE            NAME                                                      READY   STATUS      RESTARTS       AGE
+argocd               argocd-application-controller-0                           1/1     Running     0              2m22s
+argocd               argocd-applicationset-controller-5f6b7f4bf4-lh9gj         1/1     Running     0              3m20s
+argocd               argocd-dex-server-7fd846f8f7-gxbkb                        1/1     Running     0              3m20s
+argocd               argocd-notifications-controller-86664cf9-mb9ms            1/1     Running     0              3m20s
+argocd               argocd-redis-844d6b8cd-mvxgb                              1/1     Running     0              3m20s
+argocd               argocd-redis-secret-init-75p7g                            0/1     Completed   0              3m46s
+argocd               argocd-repo-server-bc58fc474-g7kn4                        1/1     Running     0              2m24s
+argocd               argocd-server-579bfdd6bc-r52xw                            1/1     Running     0              3m20s
+ingress-nginx        ingress-nginx-controller-nwh6h                            1/1     Running     0              5m21s
+todolist-db          postgresql-68487b8795-s2tsm                               1/1     Running     0              2m13s
+todolist             todolist-app-574b6586b-8sd75                              1/1     Running     0              118s
+todolist             todolist-app-574b6586b-pcjkb                              1/1     Running     2 (110s ago)   2m13s
+
+## R2 — Deploy GitOps (ArgoCD Application)
+NAME           SYNC STATUS   HEALTH STATUS
+todolist-app   Synced        Healthy
+
+## R3 — Acesso externo via ingress
+NAMESPACE   NAME            CLASS   HOSTS              ADDRESS       PORTS   AGE
+argocd      argocd-server   nginx   argocd.localhost   10.96.86.65   80      2m24s
+todolist    todolist-app    nginx   localhost          10.96.86.65   80      2m13s
+
+## R4 — Escalabilidade/resiliência
+NAME                                               REFERENCE                 TARGETS                        MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/todolist-app   Deployment/todolist-app   cpu: 1%/70%, memory: 85%/80%   2         10        2          2m13s
+
+NAME                                      MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
+poddisruptionbudget.policy/todolist-app   1               N/A               1                     2m14s
