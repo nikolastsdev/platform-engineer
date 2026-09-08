@@ -47,7 +47,7 @@ Rodar tudo é `make create` (sobe o ambiente) e `make destroy` (remove). O Makef
 
 ### Por que Kind local (em vez de cloud)?
 
-Opção deliberada: por burocracia de billing/faturamento, não se utiliza serviço de cloud. O ambiente é um laboratório local com **Kind** — recomendado pela [documentação oficial do Kubernetes](https://kind.sigs.k8s.io/). O GitOps permanece como fonte de verdade (deploy via ArgoCD + Helm chart no repositório); a infraestrutura é provisionada via CLI (`make create`). Detalhes e argumentos completos no [registro de decisões](docs/decisoes/escopo-decisoes.md#ambiente-kind-local-em-vez-de-cloud-eksgke).
+O desafio foi feito em ambiente local com **Kind** por questões de billing e faturamento da cloud. O funcionamento é o mesmo de um cluster real: Terraform provisiona os recursos, ArgoCD aplica via GitOps e o ingress expõe a aplicação externamente. Detalhes e argumentos completos no [registro de decisões](docs/decisoes/escopo-decisoes.md#ambiente-kind-local-em-vez-de-cloud-eksgke).
 
 ---
 
