@@ -20,13 +20,14 @@
 
 ## Visão geral
 
-**O que é:** pipeline local, código puro — nenhum clique no console.
-- **Cluster:** Kind (4 nodes, K8s v1.30.0) via Terraform
-- **Deploy:** ArgoCD (GitOps) sincroniza `k8s/helm/todolist-app`
-- **App:** Flask + PostgreSQL, acessível em `http://localhost/`
-- **Escopo:** apenas R1–R5 do PDF (sem extras)
+**O que é:** ambiente Kubernetes local com deploy automatizado via GitOps (ArgoCD).
 
-**Como funciona em 3 passos:** `make create` → `make destroy`. Tudo no `Makefile`.
+- **Cluster:** Kind (4 nodes, Kubernetes v1.30.0), provisionado com Terraform via `make create`
+- **Deploy:** ArgoCD sincroniza a aplicação a partir do Helm chart no repositório
+- **Aplicação:** Flask + PostgreSQL, acessível em `http://localhost/`
+- **Escopo:** apenas os requisitos R1–R5 do PDF (sem extras)
+
+Rodar tudo é `make create` (sobe o ambiente) e `make destroy` (remove). O Makefile apenas encurta as chamadas de `terraform`/`kubectl`.
 
 ---
 
@@ -34,7 +35,7 @@
 
 [![Arquitetura (archify)](docs/arquitetura-manifestos/manifestos-arquitetura.html)](docs/arquitetura-manifestos/manifestos-arquitetura.html)
 
-**Diagrama interativo atualizado** com CI + PostgreSQL → `docs/arquitetura-manifestos/manifestos-arquitetura.html` (pan/zoom/busca/exporta PNG/SVG). Dados: `manifestos-arquitetura.json`. Componentes: Repo Git → Helm chart (fonte única) → ArgoCD (GitOps) → Kind Cluster (4 nodes) → PostgreSQL + todolist-app; CI promove tag no values.
+**Fluxo:** o código da aplicação e do Helm chart ficam no repositório; o ArgoCD aplica o que está no `k8s/helm/todolist-app` e o CI atualiza a versão da imagem no `values.yaml`. Diagrama interativo (pan/zoom/busca, exporta PNG/SVG): `docs/arquitetura-manifestos/manifestos-arquitetura.html` (dados em `manifestos-arquitetura.json`).
 
 ### Divisão de responsabilidades
 
@@ -52,13 +53,13 @@ Não há disponibilidade de serviço de cloud por burocracia de billing/faturame
 
 ## Requisitos atendidos
 
-| Req | Descrição | Como é atendido | Onde |
-|-----|-----------|-----------------|------|
-| **R1** | Cluster + infra por código | `terraform/` + `make create` |
-| **R2** | Deploy automatizado | `k8s/helm/` (ArgoCD sync) |
-| **R3** | Acesso externo | `ingress.yaml` (`localhost`) |
-| **R4** | Escala + resiliência | `hpa.yaml`, `pdb.yaml`, `deployment.yaml` |
-| **R5** | Documentação | Este README + `docs/decisoes/` + `docs/evidencias/` |
+| Req | Descrição | Como é atendido |
+|-----|-----------|-----------------|
+| **R1** | Cluster e dependências provisionados por código, repetível | `terraform/` + `make create` (Kind, ingress-nginx, metrics-server, ArgoCD) |
+| **R2** | Deploy automático de nova versão da app | ArgoCD sincroniza `k8s/helm/todolist-app` a partir do repositório |
+| **R3** | Acesso pelo navegador, fora do cluster | Ingress nginx expõe a app em `http://localhost/` |
+| **R4** | Escalável e resiliente | HPA, PodDisruptionBudget e probes no chart (`hpa.yaml`, `pdb.yaml`, `deployment.yaml`) |
+| **R5** | Documentação, decisões e evidências de execução | Este README + `docs/decisoes/` + `docs/evidencias/` |
 
 ---
 
@@ -77,13 +78,13 @@ Não há disponibilidade de serviço de cloud por burocracia de billing/faturame
 ## Execução (como rodar)
 
 ```bash
-make create    # provisiona tudo (3-5 min)
-make destroy   # limpa tudo
-curl http://localhost/        # app
+make create    # sobe todo o ambiente (3-5 min)
+make destroy   # remove todo o ambiente
+curl http://localhost/        # aplicação
 curl -k https://localhost/ -H "Host: argocd.localhost"  # ArgoCD
 ```
 
-> Nenhum passo manual no console — só `make create`.
+O `make create` roda `terraform init + apply` e provisiona cluster, ingress-nginx, metrics-server, ArgoCD e namespaces — tudo por código.
 
 ---
 
@@ -97,7 +98,7 @@ curl -k https://localhost/ -H "Host: argocd.localhost"  # ArgoCD
 ├── .github/workflows/
 │   └── ci.yaml                    # Test → Build+Push GHCR → Scan → Deploy GitOps
 ├── k8s/
-│   └── helm/todolist-app/         # ⭐ FONTE ÚNICA — Helm chart (ArgoCD sync)
+│   └── helm/todolist-app/         # Helm chart (ArgoCD sync)
 │       ├── Chart.yaml, values.yaml, values.schema.json
 │       └── templates/             # namespace, deployment, service, ingress, hpa, pdb, ...
 ├── app/todolist/                  # Aplicação Flask (Dockerfile, app.py, requirements.txt)
@@ -113,20 +114,16 @@ curl -k https://localhost/ -H "Host: argocd.localhost"  # ArgoCD
 
 ## Pipeline CI/CD
 
-Pipeline única (`.github/workflows/ci.yaml`) — 4 jobs, foco nos requisitos (single ambiente local):
+Pipeline em 4 etapas (`.github/workflows/ci.yaml`) — só um ambiente local:
 
 ```
 test  →  build  →  scan  →  deploy
-(Python + (Build+Push  (Trivy  (GitOps: promove imagem
- Postgres)  GHCR)        scan)    no values.yaml → ArgoCD sync)
 ```
 
 - **test:** testes da aplicação (Python + PostgreSQL)
 - **build:** build + push da imagem para GHCR (`ghcr.io/nikolastsdev/platform-engineer/todolist:latest`)
 - **scan:** Trivy (análise de vulnerabilidades)
-- **deploy:** atualiza o `values.yaml` do Helm chart com a nova imagem — o ArgoCD sincroniza automaticamente (GitOps mono-repo)
-
-> **Detalhe GitOps:** o deploy da app é feito pelo ArgoCD apontando para `k8s/helm/todolist-app/` no repositório. O CI apenas promove a versão no Git (fonte de verdade); o ArgoCD (com self-healing) aplica ao cluster.
+- **deploy:** atualiza a versão da imagem no `values.yaml` do chart; o ArgoCD detecta a mudança no repositório e aplica ao cluster
 
 ---
 
@@ -168,5 +165,3 @@ Artefatos reais gerados na execução (ver `docs/evidencias/`):
 | Resumo kubectl (nodes, pods, app, ingress) | `docs/evidencias/resumo-kubectl.txt` | R1/R4 — 4 nodes Ready, ArgoCD Synced/Healthy, app 2/2 Running |
 | Acesso externo via curl (R3) | `docs/evidencias/curl-acesso.txt` | App HTTP 302→200 em `http://localhost`, ArgoCD HTTP 200 |
 | Página de login da app renderizada | `docs/evidencias/app-login.html` | O que o navegador renderiza (R3) |
-
-Evidências (logs, curl, HTML, kubectl): `docs/evidencias/`. Nenhum print de navegador — execução via CLI apenas.
