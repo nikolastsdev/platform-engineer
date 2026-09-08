@@ -8,7 +8,7 @@
 - [Arquitetura](#arquitetura)
 - [Requisitos atendidos](#requisitos-atendidos)
 - [Pré-requisitos](#pré-requisitos)
-- [Execução (como rodar)](#execução-como-rodar)
+- [Execução](#execução)
 - [Estrutura do repositório](#estrutura-do-repositório)
 - [Pipeline CI/CD](#pipeline-cicd)
 - [Acesso à aplicação](#acesso-à-aplicação)
@@ -75,16 +75,19 @@ Não há disponibilidade de serviço de cloud por burocracia de billing/faturame
 
 ---
 
-## Execução (como rodar)
+## Execução
 
 ```bash
 make create    # sobe todo o ambiente (3-5 min)
 make destroy   # remove todo o ambiente
-curl http://localhost/        # aplicação
-curl -k https://localhost/ -H "Host: argocd.localhost"  # ArgoCD
 ```
 
-O `make create` roda `terraform init + apply` e provisiona cluster, ingress-nginx, metrics-server, ArgoCD e namespaces — tudo por código.
+Acesso pela máquina local:
+
+- Aplicação: `http://localhost/`
+- ArgoCD: `https://localhost:8080` (NodePort 30080 → porta 8080 do host)
+
+O `make create` executa `terraform init + apply` e provisiona cluster, ingress-nginx, metrics-server, ArgoCD e namespaces. Tudo por código.
 
 ---
 
@@ -129,11 +132,16 @@ test  →  build  →  scan  →  deploy
 
 ## Acesso à aplicação
 
-- `http://localhost/` → app (`/login`)
-- `https://localhost/` + `Host: argocd.localhost` → ArgoCD
-- ArgoCD senha: `kubectl get secret argocd-initial-admin-secret ... | base64 -d`
+- Aplicação: `http://localhost/` (redirect para `/login`)
+- ArgoCD: `https://localhost:8080` (NodePort 30080, exposto na porta 8080 do host)
+- Senha inicial do ArgoCD:
 
-Portas expostas pelo Kind: 80 / 443 / 30080.
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath='{.data.password}' | base64 -d
+```
+
+Portas expostas pelo Kind no host: 80 / 443 (ingress) e 8080 (ArgoCD).
 
 ---
 
