@@ -13,5 +13,5 @@ Integrar [Aqua Security Trivy](https://trivy.dev/) na pipeline CI. Trivy escanei
 
 - ✅ Scan gratuito, rápido (segundos), integrado ao GitHub Actions
 - ✅ Suporte a imagens OCI, SBOM, vulnerabilidades
-- ❗ Falsos positivos podem ocorrer (exige `trivy ignore`)
-- ❗ Só detecta vulnerabilidades conhecidas (não bugs de aplicação)
+- ❗ Base `python:3.11-slim` tinha CVEs → corrigido para `python:3.13-slim` (`Dockerfile` atual, push `8097868`).
+- ✅ Pipeline `scan` agora passa com base atualizada; `deploy` (GitOps) pode rodar.
