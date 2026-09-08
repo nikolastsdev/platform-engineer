@@ -35,7 +35,7 @@ Rodar tudo é `make create` (sobe o ambiente) e `make destroy` (remove). O Makef
 
 [![Arquitetura (archify)](docs/arquitetura/platform-engineer-arquitetura-gitops.png)](https://nikolastsdev.github.io/platform-engineer/arquitetura.html)
 
-**Fluxo:** o código da aplicação e do Helm chart ficam no repositório; o ArgoCD aplica o que está no `k8s/helm/todolist-app` e o CI atualiza a versão da imagem no `values.yaml`. Diagrama interativo (pan/zoom/busca, exporta PNG/SVG): `docs/arquitetura/arquitetura.html` (dados em `arquitetura.json`).
+Cluster Kind local provisionado com **Terraform** e deploy **GitOps** via ArgoCD a partir de `k8s/helm/todolist-app`, com acesso externo via Ingress NGINX em `http://localhost/`. Veja a versão interativa em [nikolastsdev.github.io/platform-engineer/arquitetura.html](https://nikolastsdev.github.io/platform-engineer/arquitetura.html).
 
 ### Divisão de responsabilidades
 
