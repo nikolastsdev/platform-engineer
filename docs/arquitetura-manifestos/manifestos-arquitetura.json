@@ -2,27 +2,30 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Arquitetura de Manifestos YAML — Clean",
+    "title": "Arquitetura de Manifestos YAML — Final",
     "quality_profile": "showcase",
-    "subtitle": "Fonte única base/ (GitOps) + referência helm/ (parametrizável) sem duplicação"
+    "subtitle": "Helm chart como fonte única (GitOps) — Terraform só provisiona o cluster"
   },
   "components": [
-    { "id": "gitops", "type": "cloud", "label": "ArgoCD", "sublabel": "GitOps sync", "pos": [60, 40], "size": [140, 60] },
-    { "id": "base", "type": "database", "label": "k8s/base/", "sublabel": "Fonte única — concreto", "pos": [320, 40], "size": [140, 60] },
-    { "id": "helm", "type": "messagebus", "label": "k8s/helm/", "sublabel": "Chart referência", "pos": [320, 260], "size": [150, 60], "tag": "parametrizável" },
-    { "id": "layers", "type": "backend", "label": "Camadas (base/)", "sublabel": "namespace · config · db · app · rede · cleanup", "pos": [600, 140], "size": [200, 160] }
+    { "id": "gitrepo", "type": "cloud", "label": "Repo Git", "sublabel": "platform-engineer (fonte da verdade)", "pos": [40, 40], "size": [170, 70] },
+    { "id": "helm", "type": "database", "label": "k8s/helm/todolist-app", "sublabel": "Chart único — 13 templates + values", "pos": [300, 40], "size": [190, 70], "tag": "fonte única" },
+    { "id": "argocd", "type": "messagebus", "label": "ArgoCD", "sublabel": "GitOps sync (selfHeal + prune)", "pos": [40, 250], "size": [150, 70] },
+    { "id": "cluster", "type": "backend", "label": "Kind Cluster", "sublabel": "namespaces · app · postgres · cron", "pos": [300, 250], "size": [190, 80] },
+    { "id": "terraform", "type": "backend", "label": "Terraform", "sublabel": "bootstrap — cluster + ArgoCD", "pos": [580, 40], "size": [220, 80] }
   ],
   "boundaries": [
-    { "kind": "region", "label": "Fonte Única — GitOps", "wraps": ["base","layers"] },
-    { "kind": "region", "label": "Referência Parametrizável", "wraps": ["helm"] }
+    { "kind": "region", "label": "GitOps — repo é a fonte da verdade", "wraps": ["gitrepo", "helm"] },
+    { "kind": "region", "label": "Bootstrap (infra local)", "wraps": ["terraform"] }
   ],
   "connections": [
-    { "id": "sync", "from": "gitops", "to": "base", "label": "sync" },
-    { "id": "ref", "from": "base", "to": "helm", "fromSide": "bottom", "toSide": "left", "label": "ref.", "variant": "dashed" }
+    { "id": "push", "from": "gitrepo", "to": "helm", "label": "push/chart" },
+    { "id": "sync", "from": "argocd", "to": "helm", "label": "sync", "labelDy": -16 },
+    { "id": "apply", "from": "argocd", "to": "cluster", "label": "apply", "labelDy": 18 },
+    { "id": "bootstrap", "from": "terraform", "to": "cluster", "label": "provisiona", "variant": "dashed" }
   ],
   "cards": [
-    { "dot": "cyan", "title": "Fonte Única", "items": ["base/ contém todos os manifestos concretos", "Helm/ é referência — não duplicado no deploy"] },
-    { "dot": "emerald", "title": "Camadas", "items": ["namespace → config → database → app → network → cleanup", "kustomization.yaml define ordem semântica"] },
-    { "dot": "rose", "title": "DRY + Simplicidade", "items": ["Um YAML por recurso", "Sem templates desnecessários no GitOps", "Elegante = pequeno + legível + funcional"] }
+    { "dot": "cyan", "title": "Fonte Única (GitOps)", "items": ["Helm chart declara todos os recursos", "k8s/base/ e k8s/infra/ removidos", "ArgoCD aponta para k8s/helm/todolist-app"] },
+    { "dot": "emerald", "title": "Camadas no chart", "items": ["namespace → database → app → network → cleanup", "values.yaml parametriza tudo (imagem, réplicas, secrets)", "values.schema.json valida entradas"] },
+    { "dot": "rose", "title": "Terraform = bootstrap", "items": ["Provisiona cluster + ArgoCD + credenciais", "Cria ghcr-pull (PAT local, nunca vai pro Git)", "Recursos declarativos só no Helm"] }
   ]
 }

@@ -1,0 +1,17 @@
+{{- if .Values.namespace.create }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace.name | default "todolist" }}
+  labels:
+    {{- include "todolist-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: application
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace.databaseName | default "todolist-db" }}
+  labels:
+    {{- include "todolist-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+{{- end }}

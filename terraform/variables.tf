@@ -17,9 +17,9 @@ variable "argocd_repo_url" {
 }
 
 variable "argocd_repo_path" {
-  description = "Path inside the Git repo where the manifests live"
+  description = "Path inside the Git repo where the Helm chart lives (GitOps)"
   type        = string
-  default     = "k8s/base"
+  default     = "k8s/helm/todolist-app"
 }
 
 variable "argocd_repo_owner" {

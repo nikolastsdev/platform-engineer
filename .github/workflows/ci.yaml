@@ -129,8 +129,8 @@ jobs:
 
   # -----------------------------------------------------------------------
   # Job 4: Deploy via GitOps — Mono-repo (decisão docs/DECISOES.md #9).
-  # O ArgoCD aponta para repoURL=platform-engineer, path=k8s/base.
-  # Este job promove a imagem (tag por SHA) no manifest da app e faz push
+  # O ArgoCD aponta para repoURL=platform-engineer, path=k8s/helm/todolist-app.
+  # Este job promove a imagem (tag por SHA) no values.yaml do chart e faz push
   # de volta para main; o ArgoCD (selfHeal=true, prune=true) aplica.
   # Nota: "[skip ci]" no commit evita re-trigger deste workflow.
   # -----------------------------------------------------------------------
@@ -149,19 +149,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Promover imagem no manifest (mono-repo)
+      - name: Promover imagem no chart (mono-repo GitOps)
         run: |
           set -eu
-          # Path do manifest da app na nova arquitetura por camadas (k8s/base/app/)
-          MANIFEST="k8s/base/app/deployment.yaml"
-          sed -i -E "s#image: .*/todolist:[^ ]*#image: ${IMAGE}:${IMAGE_TAG}#" "$MANIFEST"
-          grep -n "image:" "$MANIFEST" | head -1
+          # Fonte da verdade: values.yaml do Helm chart (tag por SHA).
+          # O ArgoCD aponta para k8s/helm/todolist-app (auto-detect Helm)
+          # e re-sincroniza (selfHeal=true) quando este push chega.
+          MANIFEST="k8s/helm/todolist-app/values.yaml"
+          sed -i -E "s#^(\s*tag:).*#\1 ${IMAGE_TAG}#" "$MANIFEST"
+          grep -n "tag:" "$MANIFEST" | head -1
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$MANIFEST"
           if git diff --cached --quiet; then
-            echo "Manifest já aponta para $IMAGE_TAG — nada a commitar."
+            echo "Values já apontam para $IMAGE_TAG — nada a commitar."
           else
             git -c commit.gpgsign=false commit -m "chore: promove imagem todolist para $IMAGE_TAG [skip ci]"
             git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main

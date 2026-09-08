@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="archify 2.14.0">
-  <title>Arquitetura de Manifestos YAML — Clean Diagram</title>
+  <title>Arquitetura de Manifestos YAML — Final Diagram</title>
   <script>
     // Resolve the theme before first paint so light-preference users don't
     // see a dark flash. The toolbar script below re-applies with UI state.
@@ -4836,9 +4836,9 @@
     <div class="header">
       <div class="header-row">
         <div class="pulse-dot"></div>
-        <h1>Arquitetura de Manifestos YAML — Clean</h1>
+        <h1>Arquitetura de Manifestos YAML — Final</h1>
       </div>
-      <p class="subtitle">Fonte única base/ (GitOps) + referência helm/ (parametrizável) sem duplicação</p>
+      <p class="subtitle">Helm chart como fonte única (GitOps) — Terraform só provisiona o cluster</p>
     </div>
 
     <script id="archify-guided-views-data" type="application/json">[]</script>
@@ -4884,9 +4884,9 @@
 
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read">
-      <svg viewBox="0 0 870 408" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase">
-        <title id="archify-diagram-title">Arquitetura de Manifestos YAML — Clean</title>
-        <desc id="archify-diagram-description">Fonte única base/ (GitOps) + referência helm/ (parametrizável) sem duplicação</desc>
+      <svg viewBox="0 0 870 398" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase">
+        <title id="archify-diagram-title">Arquitetura de Manifestos YAML — Final</title>
+        <desc id="archify-diagram-description">Helm chart como fonte única (GitOps) — Terraform só provisiona o cluster</desc>
         <!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -4910,94 +4910,115 @@
         <rect width="100%" height="100%" fill="url(#grid)" />
 
         <!-- Boundaries (behind everything) -->
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" x="290" y="10" width="540" height="310" rx="12" class="c-region" stroke-width="1"/>
-        <text x="298" y="28" class="t-cloud" font-size="9" font-weight="600">Fonte Única — GitOps</text>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" x="10" y="10" width="510" height="120" rx="12" class="c-region" stroke-width="1"/>
+        <text x="18" y="28" class="t-cloud" font-size="9" font-weight="600">GitOps — repo é a fonte da verdade</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="1" x="290" y="230" width="210" height="110" rx="12" class="c-region" stroke-width="1"/>
-        <text x="298" y="248" class="t-cloud" font-size="9" font-weight="600">Referência Parametrizável</text>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="1" x="550" y="10" width="280" height="130" rx="12" class="c-region" stroke-width="1"/>
+        <text x="558" y="28" class="t-cloud" font-size="9" font-weight="600">Bootstrap (infra local)</text>
 
         <!-- Connection paths (before components for correct z-order) -->
-        <path data-edge-from="gitops" data-edge-to="base" data-edge-label="sync" data-edge-key="0" data-edge-id="sync" data-composition-points="200,70;320,70" d="M 200 70 L 320 70" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="base" data-edge-to="helm" data-edge-label="ref." data-edge-key="1" data-edge-id="ref" data-composition-points="390,100;390,124;296,124;296,290;320,290" d="M 390 100 L 390 116 Q 390 124 382 124 L 304 124 Q 296 124 296 132 L 296 282 Q 296 290 304 290 L 320 290" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="gitrepo" data-edge-to="helm" data-edge-label="push/chart" data-edge-key="0" data-edge-id="push" data-composition-points="210,68;300,68" d="M 210 68 L 300 68" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="argocd" data-edge-to="helm" data-edge-label="sync" data-edge-key="1" data-edge-id="sync" data-composition-points="190,278;245,278;245,82;300,82" d="M 190 278 L 237 278 Q 245 278 245 270 L 245 90 Q 245 82 253 82 L 300 82" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="argocd" data-edge-to="cluster" data-edge-label="apply" data-edge-key="2" data-edge-id="apply" data-composition-points="190,292;300,292" d="M 190 292 L 300 292" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="terraform" data-edge-to="cluster" data-edge-label="provisiona" data-edge-key="3" data-edge-id="bootstrap" data-composition-points="580,80;535,80;535,290;490,290" d="M 580 80 L 543 80 Q 535 80 535 88 L 535 282 Q 535 290 527 290 L 490 290" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
 
         <!-- Components -->
-        <g id="node-gitops" data-node-id="gitops" data-node-label="ArgoCD" tabindex="0" role="button" aria-label="Focus ArgoCD, GitOps sync, Architecture component" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="GitOps sync" data-node-context="Architecture component">
-          <title>ArgoCD · GitOps sync · Architecture component</title>
-          <rect x="60" y="40" width="140" height="60" rx="6" class="c-mask"/>
-          <rect x="60" y="40" width="140" height="60" rx="6" class="c-cloud" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(66 46) scale(0.6875)">
+        <g id="node-gitrepo" data-node-id="gitrepo" data-node-label="Repo Git" tabindex="0" role="button" aria-label="Focus Repo Git, platform-engineer (fonte da verdade), GitOps — repo é a fonte da verdade" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="platform-engineer (fonte da verdade)" data-node-context="GitOps — repo é a fonte da verdade">
+          <title>Repo Git · platform-engineer (fonte da verdade) · GitOps — repo é a fonte da verdade</title>
+          <rect x="40" y="40" width="170" height="70" rx="6" class="c-mask"/>
+          <rect x="40" y="40" width="170" height="70" rx="6" class="c-cloud" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(46 46) scale(0.6875)">
             <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
           </g>
-          <text data-detail-anchor x="130" y="68" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">ArgoCD</text>
-        <text data-detail="context" x="130" y="84" class="t-muted" font-size="9" text-anchor="middle">GitOps sync</text>
+          <text data-detail-anchor x="125" y="73" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Repo Git</text>
+        <text data-detail="context" x="125" y="89" class="t-muted" font-size="7.5" text-anchor="middle">platform-engineer (fonte da verdade)</text>
         </g>
 
-        <g id="node-base" data-node-id="base" data-node-label="k8s/base/" tabindex="0" role="button" aria-label="Focus k8s/base/, Fonte única — concreto, Fonte Única — GitOps" aria-pressed="false" data-node-kind="database" data-node-sublabel="Fonte única — concreto" data-node-context="Fonte Única — GitOps">
-          <title>k8s/base/ · Fonte única — concreto · Fonte Única — GitOps</title>
-          <rect x="320" y="40" width="140" height="60" rx="6" class="c-mask"/>
-          <rect x="320" y="40" width="140" height="60" rx="6" class="c-database" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(326 46) scale(0.6875)">
+        <g id="node-helm" data-node-id="helm" data-node-label="k8s/helm/todolist-app" tabindex="0" role="button" aria-label="Focus k8s/helm/todolist-app, Chart único — 13 templates + values, GitOps — repo é a fonte da verdade" aria-pressed="false" data-node-kind="database" data-node-sublabel="Chart único — 13 templates + values" data-node-tag="fonte única" data-node-context="GitOps — repo é a fonte da verdade">
+          <title>k8s/helm/todolist-app · Chart único — 13 templates + values · GitOps — repo é a fonte da verdade · fonte única</title>
+          <rect x="300" y="40" width="190" height="70" rx="6" class="c-mask"/>
+          <rect x="300" y="40" width="190" height="70" rx="6" class="c-database" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(306 46) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-detail-anchor x="390" y="68" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">k8s/base/</text>
-        <text data-detail="context" x="390" y="84" class="t-muted" font-size="9" text-anchor="middle">Fonte única — concreto</text>
+          <text data-detail-anchor x="395" y="73" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">k8s/helm/todolist-app</text>
+        <text data-detail="context" x="395" y="89" class="t-muted" font-size="8.6" text-anchor="middle">Chart único — 13 templates + values</text>
+        <text data-detail="fine" x="395" y="102" class="t-database" font-size="7" text-anchor="middle">fonte única</text>
         </g>
 
-        <g id="node-helm" data-node-id="helm" data-node-label="k8s/helm/" tabindex="0" role="button" aria-label="Focus k8s/helm/, Chart referência, Referência Parametrizável" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="Chart referência" data-node-tag="parametrizável" data-node-context="Referência Parametrizável">
-          <title>k8s/helm/ · Chart referência · Referência Parametrizável · parametrizável</title>
-          <rect x="320" y="260" width="150" height="60" rx="6" class="c-mask"/>
-          <rect x="320" y="260" width="150" height="60" rx="6" class="c-messagebus" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(326 266) scale(0.6875)">
+        <g id="node-argocd" data-node-id="argocd" data-node-label="ArgoCD" tabindex="0" role="button" aria-label="Focus ArgoCD, GitOps sync (selfHeal + prune), Architecture component" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="GitOps sync (selfHeal + prune)" data-node-context="Architecture component">
+          <title>ArgoCD · GitOps sync (selfHeal + prune) · Architecture component</title>
+          <rect x="40" y="250" width="150" height="70" rx="6" class="c-mask"/>
+          <rect x="40" y="250" width="150" height="70" rx="6" class="c-messagebus" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(46 256) scale(0.6875)">
             <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>
             <circle cx="5" cy="4.5" r="1" class="sigil-fill"/>
             <circle cx="10.5" cy="8" r="1" class="sigil-fill"/>
             <circle cx="7" cy="11.5" r="1" class="sigil-fill"/>
           </g>
-          <text data-detail-anchor x="395" y="288" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">k8s/helm/</text>
-        <text data-detail="context" x="395" y="304" class="t-muted" font-size="9" text-anchor="middle">Chart referência</text>
-        <text data-detail="fine" x="395" y="312" class="t-messagebus" font-size="7" text-anchor="middle">parametrizável</text>
+          <text data-detail-anchor x="115" y="283" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">ArgoCD</text>
+        <text data-detail="context" x="115" y="299" class="t-muted" font-size="7.8" text-anchor="middle">GitOps sync (selfHeal + prune)</text>
         </g>
 
-        <g id="node-layers" data-node-id="layers" data-node-label="Camadas (base/)" tabindex="0" role="button" aria-label="Focus Camadas (base/), namespace · config · db · app · rede · cleanup, Fonte Única — GitOps" aria-pressed="false" data-node-kind="backend" data-node-sublabel="namespace · config · db · app · rede · cleanup" data-node-context="Fonte Única — GitOps">
-          <title>Camadas (base/) · namespace · config · db · app · rede · cleanup · Fonte Única — GitOps</title>
-          <rect x="600" y="140" width="200" height="160" rx="6" class="c-mask"/>
-          <rect x="600" y="140" width="200" height="160" rx="6" class="c-backend" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(606 146) scale(0.6875)">
+        <g id="node-cluster" data-node-id="cluster" data-node-label="Kind Cluster" tabindex="0" role="button" aria-label="Focus Kind Cluster, namespaces · app · postgres · cron, Architecture component" aria-pressed="false" data-node-kind="backend" data-node-sublabel="namespaces · app · postgres · cron" data-node-context="Architecture component">
+          <title>Kind Cluster · namespaces · app · postgres · cron · Architecture component</title>
+          <rect x="300" y="250" width="190" height="80" rx="6" class="c-mask"/>
+          <rect x="300" y="250" width="190" height="80" rx="6" class="c-backend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(306 256) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-detail-anchor x="700" y="218" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Camadas (base/)</text>
-        <text data-detail="context" x="700" y="234" class="t-muted" font-size="6.9" text-anchor="middle">namespace · config · db · app · rede · cleanup</text>
+          <text data-detail-anchor x="395" y="288" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Kind Cluster</text>
+        <text data-detail="context" x="395" y="304" class="t-muted" font-size="8.9" text-anchor="middle">namespaces · app · postgres · cron</text>
+        </g>
+
+        <g id="node-terraform" data-node-id="terraform" data-node-label="Terraform" tabindex="0" role="button" aria-label="Focus Terraform, bootstrap — cluster + ArgoCD, Bootstrap (infra local)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="bootstrap — cluster + ArgoCD" data-node-context="Bootstrap (infra local)">
+          <title>Terraform · bootstrap — cluster + ArgoCD · Bootstrap (infra local)</title>
+          <rect x="580" y="40" width="220" height="80" rx="6" class="c-mask"/>
+          <rect x="580" y="40" width="220" height="80" rx="6" class="c-backend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(586 46) scale(0.6875)">
+            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+          </g>
+          <text data-detail-anchor x="690" y="78" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Terraform</text>
+        <text data-detail="context" x="690" y="94" class="t-muted" font-size="9" text-anchor="middle">bootstrap — cluster + ArgoCD</text>
         </g>
 
         <!-- Connection labels -->
-        <g data-detail="context" data-edge-from="gitops" data-edge-to="base" data-edge-label="sync" data-edge-key="0" data-edge-id="sync">
-          <rect x="245" y="50" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="260" y="60" class="t-muted" font-size="8" text-anchor="middle">sync</text>
+        <g data-detail="context" data-edge-from="gitrepo" data-edge-to="helm" data-edge-label="push/chart" data-edge-key="0" data-edge-id="push">
+          <rect x="226" y="48" width="58" height="14" rx="3" class="c-mask"/>
+          <text x="255" y="58" class="t-muted" font-size="8" text-anchor="middle">push/chart</text>
         </g>
-        <g data-detail="context" data-edge-from="base" data-edge-to="helm" data-edge-label="ref." data-edge-key="1" data-edge-id="ref">
-          <rect x="328" y="104" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="343" y="114" class="t-messagebus" font-size="8" text-anchor="middle">ref.</text>
+        <g data-detail="context" data-edge-from="argocd" data-edge-to="helm" data-edge-label="sync" data-edge-key="1" data-edge-id="sync">
+          <rect x="230" y="144" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="245" y="154" class="t-muted" font-size="8" text-anchor="middle">sync</text>
+        </g>
+        <g data-detail="context" data-edge-from="argocd" data-edge-to="cluster" data-edge-label="apply" data-edge-key="2" data-edge-id="apply">
+          <rect x="228" y="290" width="34" height="14" rx="3" class="c-mask"/>
+          <text x="245" y="300" class="t-muted" font-size="8" text-anchor="middle">apply</text>
+        </g>
+        <g data-detail="context" data-edge-from="terraform" data-edge-to="cluster" data-edge-label="provisiona" data-edge-key="3" data-edge-id="bootstrap">
+          <rect x="506" y="165" width="58" height="14" rx="3" class="c-mask"/>
+          <text x="535" y="175" class="t-messagebus" font-size="8" text-anchor="middle">provisiona</text>
         </g>
 
         <!-- Legend -->
         <g data-legend data-legend-bridge>
-          <text x="40" y="372" class="t-primary" font-size="12" font-weight="650">Legend</text>
-          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Backend" data-legend-x="40" data-legend-baseline="392" data-legend-width="78">
-            <rect x="40" y="383" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
-            <text x="62" y="392" class="t-muted" font-size="10" font-weight="500">Backend</text>
+          <text x="40" y="362" class="t-primary" font-size="12" font-weight="650">Legend</text>
+          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Backend" data-legend-x="40" data-legend-baseline="382" data-legend-width="78">
+            <rect x="40" y="373" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
+            <text x="62" y="382" class="t-muted" font-size="10" font-weight="500">Backend</text>
           </g>
-          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Database" data-legend-x="140" data-legend-baseline="392" data-legend-width="83">
-            <rect x="140" y="383" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
-            <text x="162" y="392" class="t-muted" font-size="10" font-weight="500">Database</text>
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Database" data-legend-x="140" data-legend-baseline="382" data-legend-width="83">
+            <rect x="140" y="373" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
+            <text x="162" y="382" class="t-muted" font-size="10" font-weight="500">Database</text>
           </g>
-          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="Cloud" data-legend-x="245" data-legend-baseline="392" data-legend-width="68">
-            <rect x="245" y="383" width="16" height="10" rx="2.5" class="c-cloud" stroke-width="1"/>
-            <text x="267" y="392" class="t-muted" font-size="10" font-weight="500">Cloud</text>
+          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="Cloud" data-legend-x="245" data-legend-baseline="382" data-legend-width="68">
+            <rect x="245" y="373" width="16" height="10" rx="2.5" class="c-cloud" stroke-width="1"/>
+            <text x="267" y="382" class="t-muted" font-size="10" font-weight="500">Cloud</text>
           </g>
-          <g data-legend-semantic-kind="messagebus" data-legend-kind="messagebus" data-legend-label="Message bus" data-legend-x="335" data-legend-baseline="392" data-legend-width="98">
-            <rect x="335" y="383" width="16" height="10" rx="2.5" class="c-messagebus" stroke-width="1"/>
-            <text x="357" y="392" class="t-muted" font-size="10" font-weight="500">Message bus</text>
+          <g data-legend-semantic-kind="messagebus" data-legend-kind="messagebus" data-legend-label="Message bus" data-legend-x="335" data-legend-baseline="382" data-legend-width="98">
+            <rect x="335" y="373" width="16" height="10" rx="2.5" class="c-messagebus" stroke-width="1"/>
+            <text x="357" y="382" class="t-muted" font-size="10" font-weight="500">Message bus</text>
           </g>
         </g>
       </svg>
@@ -5186,34 +5207,36 @@
       <div class="card">
         <div class="card-header">
           <div class="card-dot cyan"></div>
-          <h3>Fonte Única</h3>
+          <h3>Fonte Única (GitOps)</h3>
         </div>
         <ul>
-          <li>&bull; base/ contém todos os manifestos concretos</li>
-          <li>&bull; Helm/ é referência — não duplicado no deploy</li>
+          <li>&bull; Helm chart declara todos os recursos</li>
+          <li>&bull; k8s/base/ e k8s/infra/ removidos</li>
+          <li>&bull; ArgoCD aponta para k8s/helm/todolist-app</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot emerald"></div>
-          <h3>Camadas</h3>
+          <h3>Camadas no chart</h3>
         </div>
         <ul>
-          <li>&bull; namespace → config → database → app → network → cleanup</li>
-          <li>&bull; kustomization.yaml define ordem semântica</li>
+          <li>&bull; namespace → database → app → network → cleanup</li>
+          <li>&bull; values.yaml parametriza tudo (imagem, réplicas, secrets)</li>
+          <li>&bull; values.schema.json valida entradas</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot rose"></div>
-          <h3>DRY + Simplicidade</h3>
+          <h3>Terraform = bootstrap</h3>
         </div>
         <ul>
-          <li>&bull; Um YAML por recurso</li>
-          <li>&bull; Sem templates desnecessários no GitOps</li>
-          <li>&bull; Elegante = pequeno + legível + funcional</li>
+          <li>&bull; Provisiona cluster + ArgoCD + credenciais</li>
+          <li>&bull; Cria ghcr-pull (PAT local, nunca vai pro Git)</li>
+          <li>&bull; Recursos declarativos só no Helm</li>
         </ul>
       </div>
     </div>

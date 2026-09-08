@@ -1,8 +1,9 @@
+{{- if .Values.postgresql.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgresql
-  namespace: todolist-db
+  namespace: {{ .Values.namespace.databaseName | default "todolist-db" }}
   labels:
     app: postgresql
     tier: database
@@ -21,15 +22,15 @@ spec:
     spec:
       containers:
         - name: postgresql
-          image: postgres:15-alpine
+          image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
           ports:
             - name: postgresql
               containerPort: 5432
           env:
             - name: POSTGRES_DB
-              value: "todolist"
+              value: {{ .Values.postgresql.database | quote }}
             - name: POSTGRES_USER
-              value: "todolist"
+              value: {{ .Values.postgresql.user | quote }}
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -38,20 +39,15 @@ spec:
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           resources:
-            requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: "1"
-              memory: 1Gi
+            {{- toYaml .Values.postgresql.resources | nindent 12 }}
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "todolist"]
+              command: ["pg_isready", "-U", {{ .Values.postgresql.user | quote }}]
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "todolist"]
+              command: ["pg_isready", "-U", {{ .Values.postgresql.user | quote }}]
             initialDelaySeconds: 5
             periodSeconds: 5
           volumeMounts:
@@ -65,7 +61,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgresql
-  namespace: todolist-db
+  namespace: {{ .Values.namespace.databaseName | default "todolist-db" }}
   labels:
     app: postgresql
 spec:
@@ -81,7 +77,8 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: postgresql-secrets
-  namespace: todolist-db
+  namespace: {{ .Values.namespace.databaseName | default "todolist-db" }}
 type: Opaque
 stringData:
-  POSTGRES_PASSWORD: "todolistpw"
+  POSTGRES_PASSWORD: {{ .Values.postgresql.password | quote }}
+{{- end }}

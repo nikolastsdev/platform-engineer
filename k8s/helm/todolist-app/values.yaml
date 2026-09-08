@@ -6,6 +6,31 @@
 
 # -- Override the chart name
 nameOverride: ""
+
+namespace:
+  # -- Create the namespaces (application + database)
+  create: true
+  # -- Application namespace
+  name: todolist
+  # -- Database namespace
+  databaseName: todolist-db
+
+postgresql:
+  # -- Enable PostgreSQL database
+  enabled: true
+  image:
+    repository: postgres
+    tag: 15-alpine
+  database: todolist
+  user: todolist
+  password: todolistpw
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
 # -- Override the full resource names (release + name)
 fullnameOverride: ""
 
@@ -23,6 +48,8 @@ image:
   # -- Image pull policy
   pullPolicy: Always
   # -- Image pull secrets
+  # NOTE: o secret ghcr-pull é criado pelo Terraform (bootstrap, com o PAT local
+  # via `gh auth token`) — credenciais nunca vão para o Git (GitOps seguro).
   pullSecrets:
     - name: ghcr-pull
 

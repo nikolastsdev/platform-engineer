@@ -33,26 +33,26 @@ Flux seria uma alternativa válida, mas o desafio já continava infraestrutura A
 - `readinessProbe` remove o pod do service se não estiver pronto
 - `startupProbe` protege inicialização lenta
 
-### 7. Helm + Kustomize: por que ambos?
-- `k8s/helm/`: Helm chart com valores default — serve como template parametrizável e para testes com `helm template`
-- `k8s/base/`: Kustomize com manifests concretizados — é o que o ArgoCD sincroniza no cluster
-- Decisão: ArgoCD aponta para `k8s/base` (Kustomize) para manter GitOps declarativo e simples
+### 7. Helm chart como fonte única de manifestos
+- `k8s/helm/todolist-app/`: Helm chart parametrizável — **única** fonte de recursos (app, postgres, network, cleanup, namespaces).
+- **Histórico:** inicialmente havia também `k8s/base/` (Kustomize com YAMLs estáticos), duplicando o Helm. Decidido remover a duplicação: Helm é a fonte, o ArgoCD aponta direto para o chart (`path: k8s/helm/todolist-app`).
+- Decisão: ArgoCD aponta para o Helm chart (auto-detect via `Chart.yaml`) para manter GitOps declarativo, DRY e simples.
 
 ### 8. PostgreSQL sem persistência (emptyDir)
-O banco PostgreSQL (`k8s/base/postgresql.yaml`) usa `emptyDir` — dados são perdidos em restart.
+O banco PostgreSQL (`templates/postgresql.yaml` no Helm chart) usa `emptyDir` — dados são perdidos em restart.
 Isso é **aceitável para o escopo local do desafio**: reduz complexidade e custo, e o PDF não exige persistência.
 Em produção, usaríamos PersistentVolumeClaim (ex: `hostPath` para Kind ou `StorageClass` em cloud).
 
 ### 9. Repositório GitOps: mono-repo
-O repositório de aplicação (`nikolastsdev/platform-engineer`) também contém os manifests (`k8s/base/`).
+O repositório de aplicação (`nikolastsdev/platform-engineer`) também contém o Helm chart (`k8s/helm/todolist-app/`).
 Isso simplifica: um único repo para CI + GitOps.
 **Alternativa considerada:** Repo separado de manifests (ex: `nikolastsdev/argo-test-manifests`) — descartada para evitar overhead de sincronização entre dois repos.
 
-### 11. Arquitetura clean de manifestos (camadas) — 2025-09-08
-- **Problema:** `k8s/base/` tinha todos os YAMLs achatados na raiz (`app.yaml`, `configmap.yaml`, `secrets.yaml`, `postgresql.yaml`, etc.) e o CI referenciava paths antigos (`todolist-app/`, `k8s/base/app.yaml`), causando falhas recorrentes.
-- **Decisão:** `k8s/base/` organizado em **6 camadas semânticas** — `namespace/`, `config/`, `database/`, `app/`, `network/`, `cleanup/` — com `kustomization.yaml` na raiz de `base/` declarando a ordem (namespace → config → database → app → network → cleanup). Zero duplicação: um YAML por recurso; `helm/` permanece como chart parametrizável de referência (não é fonte do deploy GitOps).
-- **CI unificado:** 3 workflows (`build.yaml`, `build-push.yml`, `ci.yaml`) reduzidos a **1** — `.github/workflows/ci.yaml` (test → build → scan → deploy GitOps mono-repo). O deploy promove a imagem no manifest `k8s/base/app/deployment.yaml` (antes `k8s/base/app.yaml`), alinhado ao mono-repo da decisão #9.
-- **Evidência de funcionamento:** `kubectl kustomize .` gera 17 recursos; `helm lint` 0 falhas; `helm template` renderiza 11 recursos; `helm unittest` 19/19 testes passando; todos YAMLs validados.
+### 11. Arquitetura limpa de manifestos — Helm único (revisão 2026-09-08)
+- **Problema:** havia duplicação entre `k8s/base/` (Kustomize) e `k8s/helm/`, além de YAMLs achatados e paths errados no CI (`todolist-app/`, `k8s/base/app.yaml`).
+- **Decisão:** `k8s/base/` **removido**. `k8s/helm/todolist-app/` é a **fonte única**, com templates organizados por função (namespace, postgresql, deployment, service, ingress, hpa, pdb, configmap, secret, serviceaccount, rbac, pull-secret, cronjob). Os namespaces (app + db) também são declarados no chart — GitOps puro (repo é a fonte da verdade; Terraform apenas provisiona cluster + ArgoCD + credenciais).
+- **CI unificado:** 3 workflows (`build.yaml`, `build-push.yml`, `ci.yaml`) reduzidos a **1** — `.github/workflows/ci.yaml` (test → build → scan → deploy GitOps mono-repo). O deploy promove a imagem editando `image.tag` no `values.yaml` do chart; o ArgoCD (selfHeal) re-sincroniza.
+- **Evidência de funcionamento:** `helm template` renderiza 17 recursos (antes: base 17 = duplicado); `helm lint` 0 falhas; `helm unittest` 19/19 passando.
 
 ### 10. Plugin mermaid para renderização
 Criado `dsh-plugin-mermaid/` — plugin que registra `mermaidRenderer` no cordis do DSH, com CLI `dsh-render-md` (PNG/SVG) e `dsh-md-preview` (servidor local com Mermaid.js CDN).
