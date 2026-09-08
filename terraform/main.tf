@@ -10,7 +10,7 @@
 # ==============================================================================
 
 locals {
-  kubeconfig = pathexpand("~/.kube/kind-${var.cluster_name}.conf")
+  kubeconfig = pathexpand("/tmp/kube-kind/kind-${var.cluster_name}.conf")
 }
 
 # ------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ locals {
 # ------------------------------------------------------------------------------
 resource "kind_cluster" "this" {
   name               = var.cluster_name
-  kubeconfig_path    = pathexpand("~/.kube/kind-${var.cluster_name}.conf")
+  kubeconfig_path    = pathexpand("/tmp/kube-kind/kind-${var.cluster_name}.conf")
 
   kind_config {
     kind        = "Cluster"

@@ -2,7 +2,7 @@
 
 Pipeline CI/CD local com **Terraform + Kind + ArgoCD (GitOps)** para deploy automatizado de uma aplicação Flask com PostgreSQL.
 
-> Atualizado: `make create` / `make destroy` (não `make up`); `todolist-app/` como pasta normal (não submódulo); CI via `.github/workflows/build.yaml`; imagem `ghcr.io/nikolastsdev/platform-engineer/todolist:latest`; nome do usuário atualizado para **Nikolas Schaffer**.
+> Atualizado: `make create` / `make destroy` (não `make up`); `app/todolist/` como pasta limpa (não submódulo); CI via `.github/workflows/build.yaml`; imagem `ghcr.io/nikolastsdev/platform-engineer/todolist:latest`; nome do usuário atualizado para **Nikolas Schaffer**.
 
 ## Arquitetura
 
@@ -64,7 +64,7 @@ kubectl port-forward -n todolist svc/todolist 8090:80 &
 │   ├── variables.tf           # argocd_repo_owner, argocd_repo_name
 │   ├── providers.tf           # kind + null
 │   └── outputs.tf             # app_namespace, kubeconfig_path
-├── todolist-app/              # App Flask (pasta normal, não submódulo)
+├── app/todolist/              # App Flask (isolado, não submódulo)
 │   ├── Dockerfile
 │   ├── app.py
 │   └── requirements.txt
@@ -83,7 +83,7 @@ kubectl port-forward -n todolist svc/todolist 8090:80 &
 
 ## Pipeline CI (funcionando)
 
-- `.github/workflows/build.yaml`: `workflow_dispatch` + `push`; `context: .`; `file: ./todolist-app/Dockerfile`; `permissions: packages: write`
+- `.github/workflows/build.yaml`: `workflow_dispatch` + `push`; `context: .`; `file: ./app/todolist/Dockerfile`; `permissions: packages: write`
 - Build passa: `completed success` (run `33823052362`)
 - Imagem: `ghcr.io/nikolastsdev/platform-engineer/todolist:latest`
 

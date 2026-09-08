@@ -9,14 +9,14 @@ KUBECONFIG := $(HOME)/.kube/kind-$(CLUSTER_NAME).conf
 help: ## Lista comandos
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
-init: ## terraform init (HCP + providers)
-	$(TERRAFORM) -chdir=$(TF_DIR) init
+init: ## terraform init (HCP + providers) - usa plugin-dir local para evitar TLS
+	$(TERRAFORM) -chdir=$(TF_DIR) init -plugin-dir=/home/nikolasschaffer/platform-engineer/terraform/.terraform/providers
 
 plan: init ## terraform plan
 	$(TERRAFORM) -chdir=$(TF_DIR) plan
 
 create: ## Provisiona tudo (init + apply + outputs)
-	$(TERRAFORM) -chdir=$(TF_DIR) init
+	$(TERRAFORM) -chdir=$(TF_DIR) init -plugin-dir=/home/nikolasschaffer/platform-engineer/terraform/.terraform/providers
 	$(TERRAFORM) -chdir=$(TF_DIR) apply -auto-approve
 	@echo ""
 	@echo "==> App:        http://localhost:5000/"
