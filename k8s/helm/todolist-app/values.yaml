@@ -203,7 +203,7 @@ secrets:
 # -- Cleanup cronjob configuration
 cleanupCronjob:
   # -- Enable cleanup cronjob
-  enabled: true
+  enabled: false
   # -- Cron schedule
   schedule: "*/5 * * * *"
   # -- Cleanup image config
