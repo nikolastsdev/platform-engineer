@@ -2,6 +2,9 @@
 # Kind Cluster Configuration
 # - 1 control-plane + 3 workers
 # - Portas expostas no host para acesso direto (sem port-forward)
+#   * 30080 -> 8080 (ArgoCD NodePort https)
+#   * 80    -> 80   (Ingress nginx — acesso da app via localhost)
+#   * 443   -> 443  (Ingress nginx TLS)
 # ==============================================================================
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -10,16 +13,16 @@ name: todolist-platform
 nodes:
   - role: control-plane
     extraPortMappings:
-      - containerPort: 5000
-        hostPort: 5000
-        listenAddress: 0.0.0.0
-        protocol: TCP
-      - containerPort: 8080
+      - containerPort: 30080
         hostPort: 8080
         listenAddress: 0.0.0.0
         protocol: TCP
       - containerPort: 80
         hostPort: 80
+        listenAddress: 0.0.0.0
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 443
         listenAddress: 0.0.0.0
         protocol: TCP
   - role: worker

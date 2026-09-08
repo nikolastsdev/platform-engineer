@@ -19,8 +19,8 @@ create: ## Provisiona tudo (init + apply + outputs)
 	$(TERRAFORM) -chdir=$(TF_DIR) init
 	$(TERRAFORM) -chdir=$(TF_DIR) apply -auto-approve
 	@echo ""
-	@echo "==> App:        http://localhost:8090 (port-forward) ou localhost:5000 (NodePort)/"
-	@echo "==> ArgoCD:     http://localhost:8080/  (user: admin | pass: make argocd-password)"
+	@echo "==> App:        http://localhost/  (ingress nginx, porta 80)"
+	@echo "==> ArgoCD:     https://localhost:8080/  (NodePort 30080 -> host 8080) (user: admin | pass: make argocd-password)"
 	@echo "==> Kubeconfig: $(KUBECONFIG)"
 
 destroy: ## Remove tudo (destroy + docker/kind cleanup)

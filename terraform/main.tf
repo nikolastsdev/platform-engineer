@@ -14,52 +14,25 @@ locals {
 }
 
 # ------------------------------------------------------------------------------
-# Cluster kind (provisionado pelo próprio Terraform via provider tehcyx/kind)
+# Cluster kind (provisionado por código via `kind create cluster`)
+# - Substitui o provider tehcyx/kind (v0.11.0, desatualizado) que crashava
+#   com extra_port_mappings vazio no node control-plane.
+# - Config declarativa em kind-config.yaml (fonte única; mesma semântica).
 # - 1 control-plane com portas 80/443 expostas ao host (acesso via localhost)
 # - 3 workers
 # ------------------------------------------------------------------------------
-resource "kind_cluster" "this" {
-  name               = var.cluster_name
-  kubeconfig_path    = pathexpand("/tmp/kube-kind/kind-${var.cluster_name}.conf")
-
-  kind_config {
-    kind        = "Cluster"
-    api_version = "kind.x-k8s.io/v1alpha4"
-
-    node {
-      role = "control-plane"
-      extra_port_mappings {
-      }
-      extra_port_mappings {
-        container_port = 30080
-        host_port      = 8080
-        listen_address = "0.0.0.0"
-        protocol       = "TCP"
-      }
-      # Ingress-nginx roda com hostNetwork=true e escuta na porta 80/443
-      # dentro do node -> mapeamos para o host (localhost:80)
-      extra_port_mappings {
-        container_port = 80
-        host_port      = 80
-        listen_address = "0.0.0.0"
-        protocol       = "TCP"
-      }
-      extra_port_mappings {
-        container_port = 443
-        host_port      = 443
-        listen_address = "0.0.0.0"
-        protocol       = "TCP"
-      }
-    }
-    node {
-      role = "worker"
-    }
-    node {
-      role = "worker"
-    }
-    node {
-      role = "worker"
-    }
+resource "null_resource" "create_kind_cluster" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      mkdir -p "$(dirname "${local.kubeconfig}")"
+      echo "==> Criando cluster kind '${var.cluster_name}' (config: kind-config.yaml)..."
+      kind create cluster \
+        --config "${path.module}/kind-config.yaml" \
+        --kubeconfig "${local.kubeconfig}" \
+        --wait 300s
+      echo "==> Cluster kind OK (nodes: $(kind get nodes --name ${var.cluster_name} | tr '\n' ' '))"
+    EOT
   }
 }
 
@@ -67,7 +40,7 @@ resource "kind_cluster" "this" {
 # NGINX Ingress Controller (helm, após cluster existir)
 # ------------------------------------------------------------------------------
 resource "null_resource" "install_ingress" {
-  depends_on = [kind_cluster.this]
+  depends_on = [null_resource.create_kind_cluster]
 
   provisioner "local-exec" {
     command = <<-EOT
@@ -83,7 +56,7 @@ resource "null_resource" "install_ingress" {
         --set controller.service.type=NodePort \
         --set controller.hostNetwork=true \
         --set controller.dnsPolicy=ClusterFirstWithHostNet \
-        --set controller.nodeSelector.node-role\\.kubernetes\\.io/control-plane="" \
+        --set-json 'controller.nodeSelector={"node-role.kubernetes.io/control-plane": ""}' \
         --set controller.tolerations[0].operator=Exists \
         --set controller.publishService.enabled=true \
         --wait --timeout 300s > /dev/null 2>&1
