@@ -1,20 +1,24 @@
-# Kustomize base — manifests da aplicação todolist sincronizados pelo ArgoCD
+# Kustomize base — arquitetura clean por camadas
+# Fonte única de verdade para o GitOps (ArgoCD sync).
 # Ordem semântica declarativa (sem prefixos numéricos):
-# namespaces → secrets/config → database → app → ingress/rbac/network → cleanup
+# namespace → config → database → app → network → cleanup
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - namespace-app.yaml
-  - namespace-database.yaml
-  - secrets.yaml
-  - configmap.yaml
-  - postgresql.yaml
-  - app.yaml
-  - ingress.yaml
-  - pdb.yaml
-  - rbac.yaml
-  - ghcr-pull-secret.yaml
+  - namespace/namespace-app.yaml
+  - namespace/namespace-database.yaml
+  - config/configmap.yaml
+  - config/secret.yaml
+  - config/ghcr-pull-secret.yaml
+  - database/postgresql.yaml
+  - app/deployment.yaml
+  - app/hpa.yaml
+  - app/pdb.yaml
+  - network/service.yaml
+  - network/ingress.yaml
+  - network/rbac.yaml
+  - cleanup/cronjob.yaml
 
 labels:
   - pairs:

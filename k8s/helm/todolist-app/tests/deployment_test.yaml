@@ -2,17 +2,8 @@
 # https://github.com/helm-unittest/helm-unittest
 ---
 suite: test deployment
-templates:
-  - deployment.yaml
-  - service.yaml
-  - ingress.yaml
-  - configmap.yaml
-  - secret.yaml
-  - hpa.yaml
-  - pdb.yaml
-  - serviceaccount.yaml
-  - rbac.yaml
-  - cronjob.yaml
+# NOTA: sem lista `templates:` na suite — o helm-unittest carrega o chart
+# inteiro (incluindo _helpers.tpl); cada teste seleciona seu template via `template:`
 release:
   name: todolist-release
   namespace: todolist

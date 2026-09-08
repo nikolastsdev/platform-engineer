@@ -1,0 +1,7 @@
+should render all expected resources:
+  1: |
+    app.kubernetes.io/instance: todolist-release
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: todolist-app
+    app.kubernetes.io/version: 2.0.0
+    helm.sh/chart: todolist-app-1.0.0

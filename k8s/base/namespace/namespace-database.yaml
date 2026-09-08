@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: todolist-db
+  labels:
+    app.kubernetes.io/name: todolist
+    app.kubernetes.io/component: database

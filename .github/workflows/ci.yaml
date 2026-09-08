@@ -58,7 +58,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        working-directory: todolist-app
+        working-directory: app/todolist
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -70,7 +70,7 @@ jobs:
           DB_NAME: todolist
           DB_USER: todolist
           DB_PASSWORD: testpass
-        working-directory: todolist-app
+        working-directory: app/todolist
         run: python -c "from app import app; print('App imports OK')"
 
   # -----------------------------------------------------------------------
@@ -99,8 +99,8 @@ jobs:
       - name: Build & push imagem
         uses: docker/build-push-action@v6
         with:
-          context: todolist-app
-          file: todolist-app/Dockerfile
+          context: app/todolist
+          file: app/todolist/Dockerfile
           push: true
           tags: |
             ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
@@ -128,8 +128,11 @@ jobs:
           exit-code: '1'
 
   # -----------------------------------------------------------------------
-  # Job 4: Deploy via GitOps — atualiza o manifest de imagem no repo de
-  # manifests (argo-test-manifests); o ArgoCD auto-sync aplica no cluster.
+  # Job 4: Deploy via GitOps — Mono-repo (decisão docs/DECISOES.md #9).
+  # O ArgoCD aponta para repoURL=platform-engineer, path=k8s/base.
+  # Este job promove a imagem (tag por SHA) no manifest da app e faz push
+  # de volta para main; o ArgoCD (selfHeal=true, prune=true) aplica.
+  # Nota: "[skip ci]" no commit evita re-trigger deste workflow.
   # -----------------------------------------------------------------------
   deploy:
     name: Deploy (GitOps)
@@ -141,34 +144,25 @@ jobs:
 
     env:
       GITOPS_REPO: ${{ secrets.GITOPS_REPO }}
-      GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Atualizar imagem no repo GitOps
-        if: env.GITOPS_REPO != '' && env.GITOPS_TOKEN != ''
+      - name: Promover imagem no manifest (mono-repo)
         run: |
           set -eu
-          REPO="$GITOPS_REPO"
-          WORK="$(mktemp -d)"
-          git clone "https://x-access-token:${GITOPS_TOKEN}@github.com/${REPO}.git" "$WORK"
-          cd "$WORK"
-
-          # Fixa o manifest da app para a imagem GHCR com a tag por SHA.
-          # O ArgoCD (selfHeal=true, prune=true) no repo platform-engineer
-          # detecta a mudança em k8s/base/app.yaml e aplica automaticamente.
-          MANIFEST="k8s/base/app.yaml"
+          # Path do manifest da app na nova arquitetura por camadas (k8s/base/app/)
+          MANIFEST="k8s/base/app/deployment.yaml"
           sed -i -E "s#image: .*/todolist:[^ ]*#image: ${IMAGE}:${IMAGE_TAG}#" "$MANIFEST"
+          grep -n "image:" "$MANIFEST" | head -1
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add "$MANIFEST"
           if git diff --cached --quiet; then
             echo "Manifest já aponta para $IMAGE_TAG — nada a commitar."
           else
-            git -c commit.gpgsign=false commit -m "chore: atualiza imagem todolist para $IMAGE_TAG [skip ci]"
-            git push origin HEAD:main
+            git -c commit.gpgsign=false commit -m "chore: promove imagem todolist para $IMAGE_TAG [skip ci]"
+            git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
           fi
-          rm -rf "$WORK"

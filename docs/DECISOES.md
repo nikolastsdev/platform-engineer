@@ -48,6 +48,12 @@ O repositório de aplicação (`nikolastsdev/platform-engineer`) também contém
 Isso simplifica: um único repo para CI + GitOps.
 **Alternativa considerada:** Repo separado de manifests (ex: `nikolastsdev/argo-test-manifests`) — descartada para evitar overhead de sincronização entre dois repos.
 
+### 11. Arquitetura clean de manifestos (camadas) — 2025-09-08
+- **Problema:** `k8s/base/` tinha todos os YAMLs achatados na raiz (`app.yaml`, `configmap.yaml`, `secrets.yaml`, `postgresql.yaml`, etc.) e o CI referenciava paths antigos (`todolist-app/`, `k8s/base/app.yaml`), causando falhas recorrentes.
+- **Decisão:** `k8s/base/` organizado em **6 camadas semânticas** — `namespace/`, `config/`, `database/`, `app/`, `network/`, `cleanup/` — com `kustomization.yaml` na raiz de `base/` declarando a ordem (namespace → config → database → app → network → cleanup). Zero duplicação: um YAML por recurso; `helm/` permanece como chart parametrizável de referência (não é fonte do deploy GitOps).
+- **CI unificado:** 3 workflows (`build.yaml`, `build-push.yml`, `ci.yaml`) reduzidos a **1** — `.github/workflows/ci.yaml` (test → build → scan → deploy GitOps mono-repo). O deploy promove a imagem no manifest `k8s/base/app/deployment.yaml` (antes `k8s/base/app.yaml`), alinhado ao mono-repo da decisão #9.
+- **Evidência de funcionamento:** `kubectl kustomize .` gera 17 recursos; `helm lint` 0 falhas; `helm template` renderiza 11 recursos; `helm unittest` 19/19 testes passando; todos YAMLs validados.
+
 ### 10. Plugin mermaid para renderização
 Criado `dsh-plugin-mermaid/` — plugin que registra `mermaidRenderer` no cordis do DSH, com CLI `dsh-render-md` (PNG/SVG) e `dsh-md-preview` (servidor local com Mermaid.js CDN).
 O README é o índice. `docs/DECISOES.md` explica o "porquê". `docs/DESAFIOS.md` registra obstáculos.

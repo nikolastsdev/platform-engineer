@@ -2,7 +2,7 @@ SHELL := /bin/bash
 TERRAFORM := terraform
 TF_DIR := terraform
 CLUSTER_NAME ?= todolist-platform
-KUBECONFIG := $(HOME)/.kube/kind-$(CLUSTER_NAME).conf
+KUBECONFIG := /tmp/kube-kind/kind-$(CLUSTER_NAME).conf
 
 .PHONY: help init plan create destroy reset clean argocd-password
 
@@ -19,7 +19,7 @@ create: ## Provisiona tudo (init + apply + outputs)
 	$(TERRAFORM) -chdir=$(TF_DIR) init -plugin-dir=/home/nikolasschaffer/platform-engineer/terraform/.terraform/providers
 	$(TERRAFORM) -chdir=$(TF_DIR) apply -auto-approve
 	@echo ""
-	@echo "==> App:        http://localhost:5000/"
+	@echo "==> App:        http://localhost:8090 (port-forward) ou localhost:5000 (NodePort)/"
 	@echo "==> ArgoCD:     http://localhost:8080/  (user: admin | pass: make argocd-password)"
 	@echo "==> Kubeconfig: $(KUBECONFIG)"
 
