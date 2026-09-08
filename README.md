@@ -47,7 +47,7 @@ Rodar tudo é `make create` (sobe o ambiente) e `make destroy` (remove). O Makef
 
 ### Por que Kind local (em vez de cloud)?
 
-Não há disponibilidade de serviço de cloud por burocracia de billing/faturamento. A escolha foi um laboratório local usando **Kind**, recomendado pela [documentação oficial do Kubernetes](https://kind.sigs.k8s.io/). O GitOps é mantido (Git como fonte de verdade); a infra é provisionada via CLI por ser ambiente local. Detalhes no [registro de decisões](docs/decisoes/escopo-decisoes.md#ambiente-kind-local-em-vez-de-cloud-eksgke).
+Opção deliberada: por burocracia de billing/faturamento, não se utiliza serviço de cloud. O ambiente é um laboratório local com **Kind** — recomendado pela [documentação oficial do Kubernetes](https://kind.sigs.k8s.io/). O GitOps permanece como fonte de verdade (deploy via ArgoCD + Helm chart no repositório); a infraestrutura é provisionada via CLI (`make create`). Detalhes e argumentos completos no [registro de decisões](docs/decisoes/escopo-decisoes.md#ambiente-kind-local-em-vez-de-cloud-eksgke).
 
 ---
 
