@@ -99,7 +99,7 @@ O `make create` executa `terraform init + apply` e provisiona cluster, ingress-n
 │   ├── argocd.tf                  # repo credentials (PAT via gh auth token)
 │   ├── variables.tf / providers.tf / outputs.tf
 ├── .github/workflows/
-│   ├── ci.yaml                    # Test → Build+Push GHCR → Scan → Deploy GitOps
+│   ├── ci.yaml                    # Test → Build+Push GHCR → Deploy GitOps
 │   └── pages.yaml                 # Publica o diagrama de arquitetura no GitHub Pages
 ├── k8s/
 │   └── helm/todolist-app/         # Helm chart (ArgoCD sync)
@@ -120,16 +120,15 @@ O `make create` executa `terraform init + apply` e provisiona cluster, ingress-n
 
 ## Pipeline CI/CD
 
-Pipeline em 4 etapas (`.github/workflows/ci.yaml`) — só um ambiente local:
+Pipeline em 3 etapas (`.github/workflows/ci.yaml`) — só um ambiente local:
 
 ```
-test  →  build  →  scan  →  deploy
+test  →  build  →  deploy
 ```
 
 - **test:** testes da aplicação (Python + PostgreSQL)
 - **build:** build + push da imagem para GHCR (`ghcr.io/nikolastsdev/platform-engineer/todolist:latest`)
-- **scan:** Trivy (análise de vulnerabilidades)
-- **deploy:** atualiza a versão da imagem no `values.yaml` do chart; o ArgoCD detecta a mudança no repositório e aplica ao cluster
+- **deploy:** promove a tag (SHA) da imagem no `values.yaml` do chart (via `scripts/promote-image.py`); o ArgoCD detecta a mudança no repositório e aplica ao cluster
 
 ---
 
