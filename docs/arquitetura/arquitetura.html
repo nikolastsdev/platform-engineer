@@ -4840,8 +4840,8 @@
       </div>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"fluxo-gitops","label":"Fluxo GitOps","focus":["repo","ci","ghcr","argocd","app","db"],"note":"Push em main → CI publica imagem → ArgoCD sincroniza o chart."},{"id":"provisionamento","label":"Provisionamento","focus":["tf","ingress","argocd"],"note":"Terraform provisiona cluster e dependências via make create."},{"id":"acesso","label":"Acesso externo","focus":["user","ingress","app"],"note":"Navegador atinge a aplicação por http://localhost/."}]</script>
-    <script id="archify-source-evidence-data" type="application/json">{"schemaVersion":1,"verified":true,"repository":{"url":"https://github.com/nikolastsdev/platform-engineer","revision":"bd0230f20284a9e89630cdb9686ddbe9dc7d752d","shortRevision":"bd0230f"},"referenceCount":8,"nodes":{"repo":[{"path":"README.md","line":1,"href":"https://github.com/nikolastsdev/platform-engineer/blob/bd0230f20284a9e89630cdb9686ddbe9dc7d752d/README.md#L1"}],"ci":[{"path":".github/workflows/ci.yaml","line":31,"href":"https://github.com/nikolastsdev/platform-engineer/blob/bd0230f20284a9e89630cdb9686ddbe9dc7d752d/.github/workflows/ci.yaml#L31"}],"ghcr":[{"path":".github/workflows/ci.yaml","line":99,"href":"https://github.com/nikolastsdev/platform-engineer/blob/bd0230f20284a9e89630cdb9686ddbe9dc7d752d/.github/workflows/ci.yaml#L99"}],"tf":[{"path":"terraform/main.tf","line":24,"href":"https://github.com/nikolastsdev/platform-engineer/blob/bd0230f20284a9e89630cdb9686ddbe9dc7d752d/terraform/main.tf#L24"}],"ingress":[{"path":"k8s/helm/todolist-app/templates/ingress.yaml","line":1,"href":"https://github.com/nikolastsdev/platform-engineer/blob/bd0230f20284a9e89630cdb9686ddbe9dc7d752d/k8s/helm/todolist-app/templates/ingress.yaml#L1"}],"app":[{"path":"app/todolist/app.py","line":1,"href":"https://github.com/nikolastsdev/platform-engineer/blob/bd0230f20284a9e89630cdb9686ddbe9dc7d752d/app/todolist/app.py#L1"}],"db":[{"path":"k8s/helm/todolist-app/templates/postgresql.yaml","line":1,"href":"https://github.com/nikolastsdev/platform-engineer/blob/bd0230f20284a9e89630cdb9686ddbe9dc7d752d/k8s/helm/todolist-app/templates/postgresql.yaml#L1"}],"argocd":[{"path":"terraform/main.tf","line":100,"href":"https://github.com/nikolastsdev/platform-engineer/blob/bd0230f20284a9e89630cdb9686ddbe9dc7d752d/terraform/main.tf#L100"}]}}</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"fluxo-gitops","label":"Fluxo GitOps","focus":["repo","ci","ghcr","argocd","app","db"],"note":"Push em main → CI publica imagem → ArgoCD sincroniza o chart."},{"id":"provisionamento","label":"Provisionamento","focus":["tf","argocd"],"note":"Terraform provisiona cluster e dependências via make create."},{"id":"acesso","label":"Acesso externo","focus":["user","ingress","app"],"note":"Navegador atinge a aplicação por http://localhost/."}]</script>
+    <script id="archify-source-evidence-data" type="application/json">{"schemaVersion":1,"verified":true,"repository":{"url":"https://github.com/nikolastsdev/platform-engineer","revision":"f7738235ac684ee76c6a9f565ca40d6e1ba0303a","shortRevision":"f773823"},"referenceCount":8,"nodes":{"repo":[{"path":"README.md","line":1,"href":"https://github.com/nikolastsdev/platform-engineer/blob/f7738235ac684ee76c6a9f565ca40d6e1ba0303a/README.md#L1"}],"ci":[{"path":".github/workflows/ci.yaml","line":31,"href":"https://github.com/nikolastsdev/platform-engineer/blob/f7738235ac684ee76c6a9f565ca40d6e1ba0303a/.github/workflows/ci.yaml#L31"}],"ghcr":[{"path":".github/workflows/ci.yaml","line":99,"href":"https://github.com/nikolastsdev/platform-engineer/blob/f7738235ac684ee76c6a9f565ca40d6e1ba0303a/.github/workflows/ci.yaml#L99"}],"tf":[{"path":"terraform/main.tf","line":24,"href":"https://github.com/nikolastsdev/platform-engineer/blob/f7738235ac684ee76c6a9f565ca40d6e1ba0303a/terraform/main.tf#L24"}],"ingress":[{"path":"k8s/helm/todolist-app/templates/ingress.yaml","line":1,"href":"https://github.com/nikolastsdev/platform-engineer/blob/f7738235ac684ee76c6a9f565ca40d6e1ba0303a/k8s/helm/todolist-app/templates/ingress.yaml#L1"}],"app":[{"path":"app/todolist/app.py","line":1,"href":"https://github.com/nikolastsdev/platform-engineer/blob/f7738235ac684ee76c6a9f565ca40d6e1ba0303a/app/todolist/app.py#L1"}],"db":[{"path":"k8s/helm/todolist-app/templates/postgresql.yaml","line":1,"href":"https://github.com/nikolastsdev/platform-engineer/blob/f7738235ac684ee76c6a9f565ca40d6e1ba0303a/k8s/helm/todolist-app/templates/postgresql.yaml#L1"}],"argocd":[{"path":"terraform/main.tf","line":100,"href":"https://github.com/nikolastsdev/platform-engineer/blob/f7738235ac684ee76c6a9f565ca40d6e1ba0303a/terraform/main.tf#L100"}]}}</script>
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
       <button id="guided-view-prev" type="button" aria-label="Previous guided view" title="Previous guided view ([)">&#8592;</button>
       <div class="guided-view-copy">
@@ -4883,7 +4883,7 @@
 
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read">
-      <svg viewBox="0 0 1060 812" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="standard">
+      <svg viewBox="0 0 990 852" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="standard">
         <title id="archify-diagram-title">Platform Engineer — Arquitetura GitOps</title>
         <desc id="archify-diagram-description">A architecture diagram generated by Archify.</desc>
         <!-- Definitions -->
@@ -4912,20 +4912,18 @@
         <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" x="26" y="56" width="768" height="118" rx="12" class="c-region" stroke-width="1"/>
         <text x="34" y="74" class="t-cloud" font-size="9" font-weight="600">GitHub (cloud)</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="1" x="20" y="340" width="980" height="174" rx="12" class="c-region" stroke-width="1"/>
-        <text x="28" y="358" class="t-cloud" font-size="9" font-weight="600">Cluster Kind (local — 4 nodes, K8s v1.30)</text>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="1" x="20" y="260" width="930" height="344" rx="12" class="c-region" stroke-width="1"/>
+        <text x="28" y="278" class="t-cloud" font-size="9" font-weight="600">Cluster Kind (local — 4 nodes, K8s v1.30)</text>
 
         <!-- Connection paths (before components for correct z-order) -->
-        <path data-edge-from="repo" data-edge-to="ci" data-edge-label="push main" data-edge-key="0" data-edge-id="push-main" data-composition-points="260,122;310,122" d="M 260 122 L 310 122" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="ci" data-edge-to="ghcr" data-edge-label="build + push imagem" data-edge-key="1" data-edge-id="build-push" data-composition-points="510,122;560,122" d="M 510 122 L 560 122" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="ci" data-edge-to="repo" data-edge-label="deploy: atualiza values.yaml" data-edge-key="2" data-edge-id="deploy-values" data-composition-points="310,122;260,122" d="M 310 122 L 260 122" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
-        <path data-edge-from="repo" data-edge-to="argocd" data-edge-label="Helm chart (sync)" data-edge-key="3" data-edge-id="chart-sync" data-composition-points="260,122;284,122;284,412;790,412" d="M 260 122 L 276 122 Q 284 122 284 130 L 284 404 Q 284 412 292 412 L 790 412" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="ghcr" data-edge-to="app" data-edge-label="pull imagem" data-edge-key="4" data-edge-id="pull-imagem" data-composition-points="560,122;530,122;530,455;500,455" d="M 560 122 L 538 122 Q 530 122 530 130 L 530 447 Q 530 455 522 455 L 500 455" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
-        <path data-edge-from="argocd" data-edge-to="app" data-edge-label="GitOps apply (chart)" data-edge-key="5" data-edge-id="gitops-apply" data-composition-points="790,412;524,412;524,462;500,462" d="M 790 412 L 532 412 Q 524 412 524 420 L 524 454 Q 524 462 516 462 L 500 462" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="app" data-edge-to="db" data-edge-label="SQL" data-edge-key="6" data-edge-id="app-db" data-composition-points="500,469;560,469" d="M 500 469 L 560 469" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="user" data-edge-to="ingress" data-edge-label="HTTP localhost" data-edge-key="7" data-edge-id="user-ingress" data-composition-points="135,680;135,656;161,656;161,518;145,518;145,494" d="M 135 680 L 135 664 Q 135 656 143 656 L 153 656 Q 161 656 161 648 L 161 526 Q 161 518 153 518 L 153 518 Q 145 518 145 510 L 145 494" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="ingress" data-edge-to="app" data-edge-label="rota /" data-edge-key="8" data-edge-id="ingress-app" data-composition-points="230,462;330,462" d="M 230 462 L 330 462" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="tf" data-edge-to="argocd" data-edge-label="terraform apply" data-edge-key="9" data-edge-id="tf-provisiona" data-composition-points="945,680;945,562;875,562;875,444" d="M 945 680 L 945 570 Q 945 562 937 562 L 883 562 Q 875 562 875 554 L 875 444" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="repo" data-edge-to="ci" data-edge-label="push main" data-edge-key="0" data-edge-id="push-main" data-composition-points="260,122;300,122" d="M 260 122 L 300 122" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="ci" data-edge-to="ghcr" data-edge-label="build + push" data-edge-key="1" data-edge-id="build-push" data-composition-points="500,122;560,122" d="M 500 122 L 560 122" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="repo" data-edge-to="argocd" data-edge-label="Helm chart (sync)" data-edge-key="2" data-edge-id="chart-sync" data-composition-points="260,122;284,122;284,332;740,332" d="M 260 122 L 276 122 Q 284 122 284 130 L 284 324 Q 284 332 292 332 L 740 332" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="argocd" data-edge-to="app" data-edge-label="GitOps apply" data-edge-key="3" data-edge-id="gitops-apply" data-composition-points="740,332;494,332;494,552;470,552" d="M 740 332 L 502 332 Q 494 332 494 340 L 494 544 Q 494 552 486 552 L 470 552" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="app" data-edge-to="db" data-edge-label="SQL" data-edge-key="4" data-edge-id="app-db" data-composition-points="470,552;540,552" d="M 470 552 L 540 552" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="user" data-edge-to="ingress" data-edge-label="HTTP localhost" data-edge-key="5" data-edge-id="user-ingress" data-composition-points="135,720;135,696;161,696;161,608;145,608;145,584" d="M 135 720 L 135 704 Q 135 696 143 696 L 153 696 Q 161 696 161 688 L 161 616 Q 161 608 153 608 L 153 608 Q 145 608 145 600 L 145 584" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="ingress" data-edge-to="app" data-edge-label="rota /" data-edge-key="6" data-edge-id="ingress-app" data-composition-points="230,552;300,552" d="M 230 552 L 300 552" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="tf" data-edge-to="argocd" data-edge-label="terraform apply" data-edge-key="7" data-edge-id="tf-provisiona" data-composition-points="865,720;865,542;825,542;825,364" d="M 865 720 L 865 550 Q 865 542 857 542 L 833 542 Q 825 542 825 534 L 825 364" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
 
         <!-- Components -->
         <g id="node-repo" data-node-id="repo" data-node-label="Repositório Git" tabindex="0" role="button" aria-label="Focus Repositório Git, github.com/nikolastsdev/platform-engineer, GitHub (cloud)" aria-pressed="false" data-node-kind="external" data-node-sublabel="github.com/nikolastsdev/platform-engineer" data-node-context="GitHub (cloud)">
@@ -4940,162 +4938,154 @@
         <text data-detail="context" x="160" y="136" class="t-muted" font-size="7.8" text-anchor="middle">github.com/nikolastsdev/platform-engineer</text>
         </g>
 
-        <g id="node-ci" data-node-id="ci" data-node-label="CI — GitHub Actions" tabindex="0" role="button" aria-label="Focus CI — GitHub Actions, test · build · scan · deploy, GitHub (cloud)" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="test · build · scan · deploy" data-node-context="GitHub (cloud)">
-          <title>CI — GitHub Actions · test · build · scan · deploy · GitHub (cloud)</title>
-          <rect x="310" y="90" width="200" height="64" rx="6" class="c-mask"/>
-          <rect x="310" y="90" width="200" height="64" rx="6" class="c-cloud" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(316 96) scale(0.6875)">
+        <g id="node-ci" data-node-id="ci" data-node-label="GitHub Actions" tabindex="0" role="button" aria-label="Focus GitHub Actions, test · build · scan · deploy, GitHub (cloud)" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="test · build · scan · deploy" data-node-context="GitHub (cloud)">
+          <title>GitHub Actions · test · build · scan · deploy · GitHub (cloud)</title>
+          <rect x="300" y="90" width="200" height="64" rx="6" class="c-mask"/>
+          <rect x="300" y="90" width="200" height="64" rx="6" class="c-cloud" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(306 96) scale(0.6875)">
             <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
           </g>
-          <text data-detail-anchor x="410" y="120" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">CI — GitHub Actions</text>
-        <text data-detail="context" x="410" y="136" class="t-muted" font-size="9" text-anchor="middle">test · build · scan · deploy</text>
+          <text data-detail-anchor x="400" y="120" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">GitHub Actions</text>
+        <text data-detail="context" x="400" y="136" class="t-muted" font-size="9" text-anchor="middle">test · build · scan · deploy</text>
         </g>
 
-        <g id="node-ghcr" data-node-id="ghcr" data-node-label="GHCR" tabindex="0" role="button" aria-label="Focus GHCR, ghcr.io · registro de imagem, GitHub (cloud)" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="ghcr.io · registro de imagem" data-node-context="GitHub (cloud)">
-          <title>GHCR · ghcr.io · registro de imagem · GitHub (cloud)</title>
+        <g id="node-ghcr" data-node-id="ghcr" data-node-label="GHCR" tabindex="0" role="button" aria-label="Focus GHCR, registro de imagem, GitHub (cloud)" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="registro de imagem" data-node-context="GitHub (cloud)">
+          <title>GHCR · registro de imagem · GitHub (cloud)</title>
           <rect x="560" y="90" width="200" height="64" rx="6" class="c-mask"/>
           <rect x="560" y="90" width="200" height="64" rx="6" class="c-cloud" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(566 96) scale(0.6875)">
             <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
           </g>
           <text data-detail-anchor x="660" y="120" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">GHCR</text>
-        <text data-detail="context" x="660" y="136" class="t-muted" font-size="9" text-anchor="middle">ghcr.io · registro de imagem</text>
+        <text data-detail="context" x="660" y="136" class="t-muted" font-size="9" text-anchor="middle">registro de imagem</text>
         </g>
 
         <g id="node-user" data-node-id="user" data-node-label="Navegador" tabindex="0" role="button" aria-label="Focus Navegador, acesso local, Architecture component" aria-pressed="false" data-node-kind="external" data-node-sublabel="acesso local" data-node-context="Architecture component">
           <title>Navegador · acesso local · Architecture component</title>
-          <rect x="60" y="680" width="150" height="64" rx="6" class="c-mask"/>
-          <rect x="60" y="680" width="150" height="64" rx="6" class="c-external" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(66 686) scale(0.6875)">
+          <rect x="60" y="720" width="150" height="64" rx="6" class="c-mask"/>
+          <rect x="60" y="720" width="150" height="64" rx="6" class="c-external" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(66 726) scale(0.6875)">
             <rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
             <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
           </g>
-          <text data-detail-anchor x="135" y="710" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Navegador</text>
-        <text data-detail="context" x="135" y="726" class="t-muted" font-size="9" text-anchor="middle">acesso local</text>
+          <text data-detail-anchor x="135" y="750" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Navegador</text>
+        <text data-detail="context" x="135" y="766" class="t-muted" font-size="9" text-anchor="middle">acesso local</text>
         </g>
 
-        <g id="node-tf" data-node-id="tf" data-node-label="Terraform" tabindex="0" role="button" aria-label="Focus Terraform, make create · provisiona, Architecture component" aria-pressed="false" data-node-kind="external" data-node-sublabel="make create · provisiona" data-node-context="Architecture component">
-          <title>Terraform · make create · provisiona · Architecture component</title>
-          <rect x="870" y="680" width="150" height="64" rx="6" class="c-mask"/>
-          <rect x="870" y="680" width="150" height="64" rx="6" class="c-external" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(876 686) scale(0.6875)">
+        <g id="node-tf" data-node-id="tf" data-node-label="Terraform" tabindex="0" role="button" aria-label="Focus Terraform, make create, Architecture component" aria-pressed="false" data-node-kind="external" data-node-sublabel="make create" data-node-context="Architecture component">
+          <title>Terraform · make create · Architecture component</title>
+          <rect x="790" y="720" width="150" height="64" rx="6" class="c-mask"/>
+          <rect x="790" y="720" width="150" height="64" rx="6" class="c-external" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(796 726) scale(0.6875)">
             <rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
             <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
           </g>
-          <text data-detail-anchor x="945" y="710" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Terraform</text>
-        <text data-detail="context" x="945" y="726" class="t-muted" font-size="9" text-anchor="middle">make create · provisiona</text>
+          <text data-detail-anchor x="865" y="750" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Terraform</text>
+        <text data-detail="context" x="865" y="766" class="t-muted" font-size="9" text-anchor="middle">make create</text>
         </g>
 
         <g id="node-ingress" data-node-id="ingress" data-node-label="Ingress Nginx" tabindex="0" role="button" aria-label="Focus Ingress Nginx, portas 80/443, Cluster Kind (local — 4 nodes, K8s v1.30)" aria-pressed="false" data-node-kind="security" data-node-sublabel="portas 80/443" data-node-context="Cluster Kind (local — 4 nodes, K8s v1.30)">
           <title>Ingress Nginx · portas 80/443 · Cluster Kind (local — 4 nodes, K8s v1.30)</title>
-          <rect x="60" y="430" width="170" height="64" rx="6" class="c-mask"/>
-          <rect x="60" y="430" width="170" height="64" rx="6" class="c-security" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(66 436) scale(0.6875)">
+          <rect x="60" y="520" width="170" height="64" rx="6" class="c-mask"/>
+          <rect x="60" y="520" width="170" height="64" rx="6" class="c-security" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(66 526) scale(0.6875)">
             <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
-          <text data-detail-anchor x="145" y="460" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Ingress Nginx</text>
-        <text data-detail="context" x="145" y="476" class="t-muted" font-size="9" text-anchor="middle">portas 80/443</text>
+          <text data-detail-anchor x="145" y="550" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Ingress Nginx</text>
+        <text data-detail="context" x="145" y="566" class="t-muted" font-size="9" text-anchor="middle">portas 80/443</text>
         </g>
 
         <g id="node-app" data-node-id="app" data-node-label="todolist-app" tabindex="0" role="button" aria-label="Focus todolist-app, Flask · HPA 2–10, Cluster Kind (local — 4 nodes, K8s v1.30)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Flask · HPA 2–10" data-node-context="Cluster Kind (local — 4 nodes, K8s v1.30)">
           <title>todolist-app · Flask · HPA 2–10 · Cluster Kind (local — 4 nodes, K8s v1.30)</title>
-          <rect x="330" y="430" width="170" height="64" rx="6" class="c-mask"/>
-          <rect x="330" y="430" width="170" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(336 436) scale(0.6875)">
+          <rect x="300" y="520" width="170" height="64" rx="6" class="c-mask"/>
+          <rect x="300" y="520" width="170" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(306 526) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-detail-anchor x="415" y="460" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">todolist-app</text>
-        <text data-detail="context" x="415" y="476" class="t-muted" font-size="9" text-anchor="middle">Flask · HPA 2–10</text>
+          <text data-detail-anchor x="385" y="550" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">todolist-app</text>
+        <text data-detail="context" x="385" y="566" class="t-muted" font-size="9" text-anchor="middle">Flask · HPA 2–10</text>
         </g>
 
         <g id="node-db" data-node-id="db" data-node-label="PostgreSQL" tabindex="0" role="button" aria-label="Focus PostgreSQL, banco da aplicação, Cluster Kind (local — 4 nodes, K8s v1.30)" aria-pressed="false" data-node-kind="database" data-node-sublabel="banco da aplicação" data-node-context="Cluster Kind (local — 4 nodes, K8s v1.30)">
           <title>PostgreSQL · banco da aplicação · Cluster Kind (local — 4 nodes, K8s v1.30)</title>
-          <rect x="560" y="430" width="170" height="64" rx="6" class="c-mask"/>
-          <rect x="560" y="430" width="170" height="64" rx="6" class="c-database" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(566 436) scale(0.6875)">
+          <rect x="540" y="520" width="170" height="64" rx="6" class="c-mask"/>
+          <rect x="540" y="520" width="170" height="64" rx="6" class="c-database" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(546 526) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-detail-anchor x="645" y="460" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">PostgreSQL</text>
-        <text data-detail="context" x="645" y="476" class="t-muted" font-size="9" text-anchor="middle">banco da aplicação</text>
+          <text data-detail-anchor x="625" y="550" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">PostgreSQL</text>
+        <text data-detail="context" x="625" y="566" class="t-muted" font-size="9" text-anchor="middle">banco da aplicação</text>
         </g>
 
-        <g id="node-argocd" data-node-id="argocd" data-node-label="ArgoCD" tabindex="0" role="button" aria-label="Focus ArgoCD, GitOps sync · self-heal, Cluster Kind (local — 4 nodes, K8s v1.30)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="GitOps sync · self-heal" data-node-context="Cluster Kind (local — 4 nodes, K8s v1.30)">
-          <title>ArgoCD · GitOps sync · self-heal · Cluster Kind (local — 4 nodes, K8s v1.30)</title>
-          <rect x="790" y="380" width="170" height="64" rx="6" class="c-mask"/>
-          <rect x="790" y="380" width="170" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(796 386) scale(0.6875)">
+        <g id="node-argocd" data-node-id="argocd" data-node-label="ArgoCD" tabindex="0" role="button" aria-label="Focus ArgoCD, GitOps sync, Cluster Kind (local — 4 nodes, K8s v1.30)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="GitOps sync" data-node-context="Cluster Kind (local — 4 nodes, K8s v1.30)">
+          <title>ArgoCD · GitOps sync · Cluster Kind (local — 4 nodes, K8s v1.30)</title>
+          <rect x="740" y="300" width="170" height="64" rx="6" class="c-mask"/>
+          <rect x="740" y="300" width="170" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(746 306) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-detail-anchor x="875" y="410" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">ArgoCD</text>
-        <text data-detail="context" x="875" y="426" class="t-muted" font-size="9" text-anchor="middle">GitOps sync · self-heal</text>
+          <text data-detail-anchor x="825" y="330" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">ArgoCD</text>
+        <text data-detail="context" x="825" y="346" class="t-muted" font-size="9" text-anchor="middle">GitOps sync</text>
         </g>
 
         <!-- Connection labels -->
         <g data-detail="context" data-edge-from="repo" data-edge-to="ci" data-edge-label="push main" data-edge-key="0" data-edge-id="push-main">
-          <rect x="257.4" y="158" width="53.199999999999996" height="14" rx="3" class="c-mask"/>
-          <text x="284" y="168" class="t-backend" font-size="8" text-anchor="middle">push main</text>
+          <rect x="253.4" y="158" width="53.199999999999996" height="14" rx="3" class="c-mask"/>
+          <text x="280" y="168" class="t-backend" font-size="8" text-anchor="middle">push main</text>
         </g>
-        <g data-detail="context" data-edge-from="ci" data-edge-to="ghcr" data-edge-label="build + push imagem" data-edge-key="1" data-edge-id="build-push">
-          <rect x="489.4" y="158" width="101.2" height="14" rx="3" class="c-mask"/>
-          <text x="540" y="168" class="t-muted" font-size="8" text-anchor="middle">build + push imagem</text>
+        <g data-detail="context" data-edge-from="ci" data-edge-to="ghcr" data-edge-label="build + push" data-edge-key="1" data-edge-id="build-push">
+          <rect x="496.2" y="158" width="67.6" height="14" rx="3" class="c-mask"/>
+          <text x="530" y="168" class="t-muted" font-size="8" text-anchor="middle">build + push</text>
         </g>
-        <g data-detail="context" data-edge-from="ci" data-edge-to="repo" data-edge-label="deploy: atualiza values.yaml" data-edge-key="2" data-edge-id="deploy-values">
-          <rect x="213.8" y="158" width="144.4" height="14" rx="3" class="c-mask"/>
-          <text x="286" y="168" class="t-messagebus" font-size="8" text-anchor="middle">deploy: atualiza values.yaml</text>
+        <g data-detail="context" data-edge-from="repo" data-edge-to="argocd" data-edge-label="Helm chart (sync)" data-edge-key="2" data-edge-id="chart-sync">
+          <rect x="444.2" y="222" width="91.6" height="14" rx="3" class="c-mask"/>
+          <text x="490" y="232" class="t-muted" font-size="8" text-anchor="middle">Helm chart (sync)</text>
         </g>
-        <g data-detail="context" data-edge-from="repo" data-edge-to="argocd" data-edge-label="Helm chart (sync)" data-edge-key="3" data-edge-id="chart-sync">
-          <rect x="238.2" y="247" width="91.6" height="14" rx="3" class="c-mask"/>
-          <text x="284" y="257" class="t-muted" font-size="8" text-anchor="middle">Helm chart (sync)</text>
+        <g data-detail="context" data-edge-from="argocd" data-edge-to="app" data-edge-label="GitOps apply" data-edge-key="3" data-edge-id="gitops-apply">
+          <rect x="536.2" y="442" width="67.6" height="14" rx="3" class="c-mask"/>
+          <text x="570" y="452" class="t-muted" font-size="8" text-anchor="middle">GitOps apply</text>
         </g>
-        <g data-detail="context" data-edge-from="ghcr" data-edge-to="app" data-edge-label="pull imagem" data-edge-key="4" data-edge-id="pull-imagem">
-          <rect x="498.6" y="268.5" width="62.8" height="14" rx="3" class="c-mask"/>
-          <text x="530" y="278.5" class="t-messagebus" font-size="8" text-anchor="middle">pull imagem</text>
+        <g data-detail="context" data-edge-from="app" data-edge-to="db" data-edge-label="SQL" data-edge-key="4" data-edge-id="app-db">
+          <rect x="490" y="532" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="505" y="542" class="t-muted" font-size="8" text-anchor="middle">SQL</text>
         </g>
-        <g data-detail="context" data-edge-from="argocd" data-edge-to="app" data-edge-label="GitOps apply (chart)" data-edge-key="5" data-edge-id="gitops-apply">
-          <rect x="567" y="500" width="106" height="14" rx="3" class="c-mask"/>
-          <text x="620" y="510" class="t-muted" font-size="8" text-anchor="middle">GitOps apply (chart)</text>
+        <g data-detail="context" data-edge-from="user" data-edge-to="ingress" data-edge-label="HTTP localhost" data-edge-key="5" data-edge-id="user-ingress">
+          <rect x="81.4" y="610" width="77.2" height="14" rx="3" class="c-mask"/>
+          <text x="120" y="620" class="t-backend" font-size="8" text-anchor="middle">HTTP localhost</text>
         </g>
-        <g data-detail="context" data-edge-from="app" data-edge-to="db" data-edge-label="SQL" data-edge-key="6" data-edge-id="app-db">
-          <rect x="515" y="477" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="530" y="487" class="t-muted" font-size="8" text-anchor="middle">SQL</text>
+        <g data-detail="context" data-edge-from="ingress" data-edge-to="app" data-edge-label="rota /" data-edge-key="6" data-edge-id="ingress-app">
+          <rect x="245.6" y="532" width="38.8" height="14" rx="3" class="c-mask"/>
+          <text x="265" y="542" class="t-muted" font-size="8" text-anchor="middle">rota /</text>
         </g>
-        <g data-detail="context" data-edge-from="user" data-edge-to="ingress" data-edge-label="HTTP localhost" data-edge-key="7" data-edge-id="user-ingress">
-          <rect x="109.4" y="636" width="77.2" height="14" rx="3" class="c-mask"/>
-          <text x="148" y="646" class="t-backend" font-size="8" text-anchor="middle">HTTP localhost</text>
-        </g>
-        <g data-detail="context" data-edge-from="ingress" data-edge-to="app" data-edge-label="rota /" data-edge-key="8" data-edge-id="ingress-app">
-          <rect x="260.6" y="442" width="38.8" height="14" rx="3" class="c-mask"/>
-          <text x="280" y="452" class="t-muted" font-size="8" text-anchor="middle">rota /</text>
-        </g>
-        <g data-detail="context" data-edge-from="tf" data-edge-to="argocd" data-edge-label="terraform apply" data-edge-key="9" data-edge-id="tf-provisiona">
-          <rect x="869" y="542" width="82" height="14" rx="3" class="c-mask"/>
-          <text x="910" y="552" class="t-backend" font-size="8" text-anchor="middle">terraform apply</text>
+        <g data-detail="context" data-edge-from="tf" data-edge-to="argocd" data-edge-label="terraform apply" data-edge-key="7" data-edge-id="tf-provisiona">
+          <rect x="804" y="522" width="82" height="14" rx="3" class="c-mask"/>
+          <text x="845" y="532" class="t-backend" font-size="8" text-anchor="middle">terraform apply</text>
         </g>
 
         <!-- Legend -->
         <g data-legend data-legend-bridge>
-          <text x="40" y="776" class="t-primary" font-size="12" font-weight="650">Legend</text>
-          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Backend" data-legend-x="40" data-legend-baseline="796" data-legend-width="78">
-            <rect x="40" y="787" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
-            <text x="62" y="796" class="t-muted" font-size="10" font-weight="500">Backend</text>
+          <text x="40" y="816" class="t-primary" font-size="12" font-weight="650">Legend</text>
+          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Backend" data-legend-x="40" data-legend-baseline="836" data-legend-width="78">
+            <rect x="40" y="827" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
+            <text x="62" y="836" class="t-muted" font-size="10" font-weight="500">Backend</text>
           </g>
-          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Database" data-legend-x="140" data-legend-baseline="796" data-legend-width="83">
-            <rect x="140" y="787" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
-            <text x="162" y="796" class="t-muted" font-size="10" font-weight="500">Database</text>
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Database" data-legend-x="140" data-legend-baseline="836" data-legend-width="83">
+            <rect x="140" y="827" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
+            <text x="162" y="836" class="t-muted" font-size="10" font-weight="500">Database</text>
           </g>
-          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="Cloud" data-legend-x="245" data-legend-baseline="796" data-legend-width="68">
-            <rect x="245" y="787" width="16" height="10" rx="2.5" class="c-cloud" stroke-width="1"/>
-            <text x="267" y="796" class="t-muted" font-size="10" font-weight="500">Cloud</text>
+          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="Cloud" data-legend-x="245" data-legend-baseline="836" data-legend-width="68">
+            <rect x="245" y="827" width="16" height="10" rx="2.5" class="c-cloud" stroke-width="1"/>
+            <text x="267" y="836" class="t-muted" font-size="10" font-weight="500">Cloud</text>
           </g>
-          <g data-legend-semantic-kind="security" data-legend-kind="security" data-legend-label="Security" data-legend-x="335" data-legend-baseline="796" data-legend-width="83">
-            <rect x="335" y="787" width="16" height="10" rx="2.5" class="c-security" stroke-width="1"/>
-            <text x="357" y="796" class="t-muted" font-size="10" font-weight="500">Security</text>
+          <g data-legend-semantic-kind="security" data-legend-kind="security" data-legend-label="Security" data-legend-x="335" data-legend-baseline="836" data-legend-width="83">
+            <rect x="335" y="827" width="16" height="10" rx="2.5" class="c-security" stroke-width="1"/>
+            <text x="357" y="836" class="t-muted" font-size="10" font-weight="500">Security</text>
           </g>
-          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="External" data-legend-x="440" data-legend-baseline="796" data-legend-width="83">
-            <rect x="440" y="787" width="16" height="10" rx="2.5" class="c-external" stroke-width="1"/>
-            <text x="462" y="796" class="t-muted" font-size="10" font-weight="500">External</text>
+          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="External" data-legend-x="440" data-legend-baseline="836" data-legend-width="83">
+            <rect x="440" y="827" width="16" height="10" rx="2.5" class="c-external" stroke-width="1"/>
+            <text x="462" y="836" class="t-muted" font-size="10" font-weight="500">External</text>
           </g>
         </g>
       </svg>
@@ -5288,8 +5278,8 @@
         </div>
         <ul>
           <li>&bull; Push em main dispara o CI</li>
-          <li>&bull; Deploy atualiza values.yaml e o ArgoCD sincroniza</li>
-          <li>&bull; Repositório Git é a fonte da verdade</li>
+          <li>&bull; CI publica a imagem e o ArgoCD sincroniza o chart</li>
+          <li>&bull; Repo é a fonte da verdade</li>
         </ul>
       </div>
 

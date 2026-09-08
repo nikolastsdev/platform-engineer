@@ -6,43 +6,41 @@
     "quality_profile": "standard",
     "repository": {
       "url": "https://github.com/nikolastsdev/platform-engineer.git",
-      "revision": "bd0230f20284a9e89630cdb9686ddbe9dc7d752d"
+      "revision": "f7738235ac684ee76c6a9f565ca40d6e1ba0303a"
     },
     "views": [
       { "id": "fluxo-gitops", "label": "Fluxo GitOps", "focus": ["repo", "ci", "ghcr", "argocd", "app", "db"], "note": "Push em main → CI publica imagem → ArgoCD sincroniza o chart." },
-      { "id": "provisionamento", "label": "Provisionamento", "focus": ["tf", "ingress", "argocd"], "note": "Terraform provisiona cluster e dependências via make create." },
+      { "id": "provisionamento", "label": "Provisionamento", "focus": ["tf", "argocd"], "note": "Terraform provisiona cluster e dependências via make create." },
       { "id": "acesso", "label": "Acesso externo", "focus": ["user", "ingress", "app"], "note": "Navegador atinge a aplicação por http://localhost/." }
     ]
   },
   "components": [
     { "id": "repo", "type": "external", "label": "Repositório Git", "sublabel": "github.com/nikolastsdev/platform-engineer", "pos": [60, 90], "size": [200, 64], "sources": [{ "path": "README.md", "line": 1 }] },
-    { "id": "ci", "type": "cloud", "label": "CI — GitHub Actions", "sublabel": "test · build · scan · deploy", "pos": [310, 90], "size": [200, 64], "sources": [{ "path": ".github/workflows/ci.yaml", "line": 31 }] },
-    { "id": "ghcr", "type": "cloud", "label": "GHCR", "sublabel": "ghcr.io · registro de imagem", "pos": [560, 90], "size": [200, 64], "sources": [{ "path": ".github/workflows/ci.yaml", "line": 99 }] },
-    { "id": "user", "type": "external", "label": "Navegador", "sublabel": "acesso local", "pos": [60, 680], "size": [150, 64] },
-    { "id": "tf", "type": "external", "label": "Terraform", "sublabel": "make create · provisiona", "pos": [870, 680], "size": [150, 64], "sources": [{ "path": "terraform/main.tf", "line": 24 }] },
-    { "id": "ingress", "type": "security", "label": "Ingress Nginx", "sublabel": "portas 80/443", "pos": [60, 430], "size": [170, 64], "sources": [{ "path": "k8s/helm/todolist-app/templates/ingress.yaml", "line": 1 }] },
-    { "id": "app", "type": "backend", "label": "todolist-app", "sublabel": "Flask · HPA 2–10", "pos": [330, 430], "size": [170, 64], "sources": [{ "path": "app/todolist/app.py", "line": 1 }] },
-    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": "banco da aplicação", "pos": [560, 430], "size": [170, 64], "sources": [{ "path": "k8s/helm/todolist-app/templates/postgresql.yaml", "line": 1 }] },
-    { "id": "argocd", "type": "backend", "label": "ArgoCD", "sublabel": "GitOps sync · self-heal", "pos": [790, 380], "size": [170, 64], "sources": [{ "path": "terraform/main.tf", "line": 100 }] }
+    { "id": "ci", "type": "cloud", "label": "GitHub Actions", "sublabel": "test · build · scan · deploy", "pos": [300, 90], "size": [200, 64], "sources": [{ "path": ".github/workflows/ci.yaml", "line": 31 }] },
+    { "id": "ghcr", "type": "cloud", "label": "GHCR", "sublabel": "registro de imagem", "pos": [560, 90], "size": [200, 64], "sources": [{ "path": ".github/workflows/ci.yaml", "line": 99 }] },
+    { "id": "user", "type": "external", "label": "Navegador", "sublabel": "acesso local", "pos": [60, 720], "size": [150, 64] },
+    { "id": "tf", "type": "external", "label": "Terraform", "sublabel": "make create", "pos": [790, 720], "size": [150, 64], "sources": [{ "path": "terraform/main.tf", "line": 24 }] },
+    { "id": "ingress", "type": "security", "label": "Ingress Nginx", "sublabel": "portas 80/443", "pos": [60, 520], "size": [170, 64], "sources": [{ "path": "k8s/helm/todolist-app/templates/ingress.yaml", "line": 1 }] },
+    { "id": "app", "type": "backend", "label": "todolist-app", "sublabel": "Flask · HPA 2–10", "pos": [300, 520], "size": [170, 64], "sources": [{ "path": "app/todolist/app.py", "line": 1 }] },
+    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": "banco da aplicação", "pos": [540, 520], "size": [170, 64], "sources": [{ "path": "k8s/helm/todolist-app/templates/postgresql.yaml", "line": 1 }] },
+    { "id": "argocd", "type": "backend", "label": "ArgoCD", "sublabel": "GitOps sync", "pos": [740, 300], "size": [170, 64], "sources": [{ "path": "terraform/main.tf", "line": 100 }] }
   ],
   "boundaries": [
     { "kind": "region", "label": "GitHub (cloud)", "wraps": ["repo", "ci", "ghcr"], "pad": 34 },
     { "kind": "region", "label": "Cluster Kind (local — 4 nodes, K8s v1.30)", "wraps": ["ingress", "app", "db", "argocd"], "pad": 40 }
   ],
   "connections": [
-    { "id": "push-main", "from": "repo", "to": "ci", "label": "push main", "variant": "emphasis", "labelAt": [284, 168] },
-    { "id": "build-push", "from": "ci", "to": "ghcr", "label": "build + push imagem", "labelAt": [540, 168] },
-    { "id": "deploy-values", "from": "ci", "to": "repo", "label": "deploy: atualiza values.yaml", "variant": "dashed", "labelAt": [286, 168] },
-    { "id": "chart-sync", "from": "repo", "to": "argocd", "label": "Helm chart (sync)" },
-    { "id": "pull-imagem", "from": "ghcr", "to": "app", "label": "pull imagem", "variant": "dashed" },
-    { "id": "gitops-apply", "from": "argocd", "to": "app", "label": "GitOps apply (chart)", "labelAt": [620, 510] },
-    { "id": "app-db", "from": "app", "to": "db", "label": "SQL", "labelDy": 28 },
-    { "id": "user-ingress", "from": "user", "to": "ingress", "label": "HTTP localhost", "variant": "emphasis", "fromSide": "top", "toSide": "bottom" },
+    { "id": "push-main", "from": "repo", "to": "ci", "label": "push main", "variant": "emphasis", "labelAt": [280, 168] },
+    { "id": "build-push", "from": "ci", "to": "ghcr", "label": "build + push", "labelAt": [530, 168] },
+    { "id": "chart-sync", "from": "repo", "to": "argocd", "label": "Helm chart (sync)", "labelAt": [490, 232] },
+    { "id": "gitops-apply", "from": "argocd", "to": "app", "label": "GitOps apply", "labelAt": [570, 452] },
+    { "id": "app-db", "from": "app", "to": "db", "label": "SQL" },
+    { "id": "user-ingress", "from": "user", "to": "ingress", "label": "HTTP localhost", "variant": "emphasis", "fromSide": "top", "toSide": "bottom", "labelAt": [120, 620] },
     { "id": "ingress-app", "from": "ingress", "to": "app", "label": "rota /" },
     { "id": "tf-provisiona", "from": "tf", "to": "argocd", "label": "terraform apply", "variant": "emphasis", "fromSide": "top", "toSide": "bottom" }
   ],
   "cards": [
-    { "dot": "emerald", "title": "Fluxo GitOps", "items": ["Push em main dispara o CI", "Deploy atualiza values.yaml e o ArgoCD sincroniza", "Repositório Git é a fonte da verdade"] },
+    { "dot": "emerald", "title": "Fluxo GitOps", "items": ["Push em main dispara o CI", "CI publica a imagem e o ArgoCD sincroniza o chart", "Repo é a fonte da verdade"] },
     { "dot": "amber", "title": "Provisionamento", "items": ["Terraform + Kind criam o cluster e dependências", "4 nodes: 1 control-plane + 3 workers", "Acesso local: app :80 · ArgoCD :8080"] },
     { "dot": "violet", "title": "Escala e resiliência", "items": ["HPA 2–10 (CPU 70% / mem 80%)", "PDB minAvailable 1", "Probes de readiness/liveness"] }
   ]
