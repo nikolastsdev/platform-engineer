@@ -99,7 +99,8 @@ O `make create` executa `terraform init + apply` e provisiona cluster, ingress-n
 │   ├── argocd.tf                  # repo credentials (PAT via gh auth token)
 │   ├── variables.tf / providers.tf / outputs.tf
 ├── .github/workflows/
-│   └── ci.yaml                    # Test → Build+Push GHCR → Scan → Deploy GitOps
+│   ├── ci.yaml                    # Test → Build+Push GHCR → Scan → Deploy GitOps
+│   └── pages.yaml                 # Publica o diagrama de arquitetura no GitHub Pages
 ├── k8s/
 │   └── helm/todolist-app/         # Helm chart (ArgoCD sync)
 │       ├── Chart.yaml, values.yaml, values.schema.json
