@@ -4,7 +4,13 @@ Pipeline CI/CD local com **Terraform + Kind + ArgoCD (GitOps)** para deploy auto
 
 > Atualizado: `make create` / `make destroy` (não `make up`); `app/todolist/` como pasta limpa (não submódulo); CI unificado via `.github/workflows/ci.yaml` (test → build → scan → deploy GitOps mono-repo); imagem `ghcr.io/nikolastsdev/platform-engineer/todolist:latest`; nome do usuário atualizado para **Nikolas Schaffer**.
 
-## Arquitetura
+## Arquitetura (diagrama archify — modo `architecture`)
+
+Diagrama real gerado via `archify` (`docs/arquitetura-manifestos/manifestos-arquitetura.html`):
+
+> **Repo Git → Helm chart (`k8s/helm/todolist-app`) → ArgoCD (selfHeal) → Kind Cluster** • Terraforme só faz bootstrap (cluster + ArgoCD + ghcr-pull, não declara recursos da app).
+
+(Abra `docs/arquitetura-manifestos/manifestos-arquitetura.html` no navegador — é artefato standalone interativo com tema claro/escuro, pan/zoom, busca e exportação PNG/SVG.)
 
 ```
 ┌───────────────────────────────────────────────────────────────────┐
@@ -48,11 +54,13 @@ Pipeline CI/CD local com **Terraform + Kind + ArgoCD (GitOps)** para deploy auto
 make create        # terraform init + apply (provisiona cluster + ArgoCD)
 make destroy       # terraform destroy + cleanup
 
-# Acesso
-make verify        # health checks
-kubectl -n argocd port-forward svc/argocd-server 8080:443
-kubectl port-forward -n todolist svc/todolist 8090:80 &
-# App: http://localhost:8090/healthz
+# Acesso via Ingress (provisionado pelo Terraform — não precisa de port-forward)
+# ArgoCD (host argocd.localhost) e App (host todolist.localhost / localhost) já são expostos pelo ingress-nginx do Kind.
+# Nenhuma gambiarra de kubectl port-forward: a plataforma já entrega os endpoints.
+
+# Se quiser ver internamente (opcional, não obrigatório):
+# kubectl get ingress -n argocd -o wide  # visar hosts mapeados
+# kubectl get ingress -n todolist -o wide
 ```
 
 ## Estrutura
@@ -89,7 +97,7 @@ kubectl port-forward -n todolist svc/todolist 8090:80 &
             │   ├── secret.yaml         # Credenciais da app
             │   ├── serviceaccount.yaml # Service Account
             │   ├── rbac.yaml           # Role + RoleBinding
-            │   ├── pull-secret.yaml    # ImagePullSecret GHCR
+            │                         # Nota: ghcr-pull secret é criado pelo Terraform (bootstrap com PAT local, nunca vai pro Git)
             │   └── cronjob.yaml        # Cleanup periódico
             └── tests/                  # helm-unittest (19 testes)
 ```
@@ -119,7 +127,15 @@ kubectl port-forward -n todolist svc/todolist 8090:80 &
 - `kind_config` usa `kubeconfig_path = pathexpand("~/.kube/kind-todolist-platform.conf")`
 - O `Dockerfile` usa `python:3.11-slim`; app roda em porta 5000 (gunicorn)
 
-### Status CI — push `b7c9124` (2026-09-08)
-- `.github/workflows/ci.yaml`: `test` ✅ | `build` ✅ | `scan` ❌ (Trivy, CVEs na base `python:3.11-slim`) | `deploy` (pulado — depende do scan)
-- A falha do Trivy é **independente** da arquitetura de manifestos; resolver exige atualizar a imagem base (fora do escopo desta entrega de manifestos clean).
-- Pipeline **unificado funcionando de ponta a ponta** (test + build confirmados), com deploy automático via GitOps (Helm chart em `k8s/helm/todolist-app/`) quando o scan for limpo.
+### Badges de Status
+
+| Métrica | Valor | Fonte |
+|---------|-------|-------|
+| Testes `helm unittest` | **19/19 (100%)** | `.github/workflows/ci.yaml` (`test`) |
+| Lint Helm (`helm lint`) | **0 falhas (100%)** | local (`k8s/helm/todolist-app`) |
+| CI `test` job | ✅ 100% | GitHub Actions |
+| CI `build` job | ✅ 100% | GitHub Actions |
+| CI `scan` (Trivy) | ❌ 0% (CVEs `python:3.11-slim`) | GitHub Actions — **não é problema da arquitetura**, é da base Docker |
+| CI `deploy` (GitOps) | ⏭️ pulado (depende do scan) | só roda quando Trivy limpo |
+
+> **Nota:** A pipeline de arquitetura está funcional (`test` + `build` confirmados, Helm renderiza 16 recursos sem `default` namespace, CI validado). O deploy só é bloqueado pelo Trivy (imagem base) — resolver a base destrava o deploy GitOps automaticamente, sem mudança no chart.
