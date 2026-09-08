@@ -1,20 +1,23 @@
 # ==============================================================================
 # Build image for todolist application
+# Python 3.13-slim (Debian trixie) — psycopg2-binary 2.9.10 já tem wheel p/ 3.13
 # ==============================================================================
 
 FROM python:3.13-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# System dependencies mínimas (apenas libpq para psycopg2, já inclui o driver)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
-    gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Python dependencies (versões com CVEs corrigidas: psycopg2 2.9.10, requests 2.32.3)
+# Corrigir msgpack/setuptools antes do build (versões com CVEs corrigidas)
+RUN pip install --no-cache-dir --force-reinstall msgpack==1.2.2 setuptools==84.0.0
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --force-reinstall -r requirements.txt
 
 # Copy application code
 COPY app.py .

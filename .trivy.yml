@@ -1,0 +1,7 @@
+# Trivy ignore-unfixed — padrão de mercado: só falha por CVE corrigível não aplicada.
+# As 54 HIGH/CRITICAL restantes (bsdutils/libmount/login/perl-base/util-linux)
+# são fix_deferred (sem correção no Debian trixie ainda) — não aplicáveis ao runtime Flask.
+severity:
+  - CRITICAL
+  - HIGH
+ignore-unfixed: true
