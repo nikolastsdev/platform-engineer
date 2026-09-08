@@ -33,7 +33,7 @@ Rodar tudo é `make create` (sobe o ambiente) e `make destroy` (remove). O Makef
 
 ## Arquitetura
 
-[![Arquitetura (archify)](docs/arquitetura/platform-engineer-arquitetura-gitops.png)](docs/arquitetura/arquitetura.html)
+[![Arquitetura (archify)](docs/arquitetura/platform-engineer-arquitetura-gitops.png)](https://nikolastsdev.github.io/platform-engineer/arquitetura.html)
 
 **Fluxo:** o código da aplicação e do Helm chart ficam no repositório; o ArgoCD aplica o que está no `k8s/helm/todolist-app` e o CI atualiza a versão da imagem no `values.yaml`. Diagrama interativo (pan/zoom/busca, exporta PNG/SVG): `docs/arquitetura/arquitetura.html` (dados em `arquitetura.json`).
 
