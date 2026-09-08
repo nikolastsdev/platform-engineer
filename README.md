@@ -33,9 +33,9 @@ Rodar tudo é `make create` (sobe o ambiente) e `make destroy` (remove). O Makef
 
 ## Arquitetura
 
-[![Arquitetura (archify)](docs/arquitetura-manifestos/manifestos-arquitetura.html)](docs/arquitetura-manifestos/manifestos-arquitetura.html)
+[![Arquitetura (archify)](docs/arquitetura/arquitetura.html)](docs/arquitetura/arquitetura.html)
 
-**Fluxo:** o código da aplicação e do Helm chart ficam no repositório; o ArgoCD aplica o que está no `k8s/helm/todolist-app` e o CI atualiza a versão da imagem no `values.yaml`. Diagrama interativo (pan/zoom/busca, exporta PNG/SVG): `docs/arquitetura-manifestos/manifestos-arquitetura.html` (dados em `manifestos-arquitetura.json`).
+**Fluxo:** o código da aplicação e do Helm chart ficam no repositório; o ArgoCD aplica o que está no `k8s/helm/todolist-app` e o CI atualiza a versão da imagem no `values.yaml`. Diagrama interativo (pan/zoom/busca, exporta PNG/SVG): `docs/arquitetura/arquitetura.html` (dados em `arquitetura.json`).
 
 ### Divisão de responsabilidades
 
@@ -106,8 +106,10 @@ O `make create` executa `terraform init + apply` e provisiona cluster, ingress-n
 │       └── templates/             # namespace, deployment, service, ingress, hpa, pdb, ...
 ├── app/todolist/                  # Aplicação Flask (Dockerfile, app.py, requirements.txt)
 ├── docs/
-│   └── decisoes/
-│       └── escopo-decisoes.md     # Registro de decisões (argumentos, o que descartou)
+│   ├── arquitetura/               # Diagrama único da arquitetura (archify: arquitetura.html + .json)
+│   ├── decisoes/
+│   │   └── escopo-decisoes.md     # Registro de decisões (argumentos, o que descartou)
+│   └── evidencias/                # Evidências reais de execução
 ├── scripts/                       # Auxiliares de operação
 ├── Makefile                       # create / destroy / clean
 └── README.md                      # Este arquivo
