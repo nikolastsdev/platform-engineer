@@ -1,6 +1,6 @@
-# Platform Engineer Challenge
+# Platform Engineer — Todolist
 
-> **Escopo:** Desafio técnico DevOps / Platform Engineer. Foco exclusivo nos requisitos R1–R5 do PDF (`DESAFIO-PLATFORM-ENGINEER.pdf`): provisão por código, deploy automatizado, acesso externo, escalabilidade/resiliência e documentação. Nada além do que os requisitos pedem (ver [Registro de Decisões](docs/decisoes/escopo-decisoes.md)).
+Plataforma Kubernetes local com deploy automatizado via **GitOps** (ArgoCD), provisionada por código (Terraform + Kind). Aplicação Flask + PostgreSQL com CI/CD, autoscaling e acesso externo.
 
 ## Índice
 
@@ -20,14 +20,15 @@
 
 ## Visão geral
 
-**O que é:** ambiente Kubernetes local com deploy automatizado via GitOps (ArgoCD).
-
 - **Cluster:** Kind (4 nodes, Kubernetes v1.30.0), provisionado com Terraform via `make create`
-- **Deploy:** ArgoCD sincroniza a aplicação a partir do Helm chart no repositório
+- **Deploy:** ArgoCD sincroniza a aplicação a partir do Helm chart no repositório (GitOps)
 - **Aplicação:** Flask + PostgreSQL, acessível em `http://localhost/`
-- **Escopo:** apenas os requisitos R1–R5 do PDF (sem extras)
+- **Escalabilidade:** HPA, PodDisruptionBudget e healthchecks no chart
 
-Rodar tudo é `make create` (sobe o ambiente) e `make destroy` (remove). O Makefile apenas encurta as chamadas de `terraform`/`kubectl`.
+```bash
+make create    # sobe todo o ambiente (~3–5 min)
+make destroy   # remove tudo
+```
 
 ---
 
@@ -47,7 +48,7 @@ Cluster Kind local provisionado com **Terraform** e deploy **GitOps** via ArgoCD
 
 ### Por que Kind local (em vez de cloud)?
 
-O desafio foi feito em ambiente local com **Kind** por questões de billing e faturamento da cloud. O funcionamento é o mesmo de um cluster real: Terraform provisiona os recursos, ArgoCD aplica via GitOps e o ingress expõe a aplicação externamente. Detalhes e argumentos completos no [registro de decisões](docs/decisoes/escopo-decisoes.md#ambiente-kind-local-em-vez-de-cloud-eksgke).
+O ambiente é local com **Kind** por limitações de billing em cloud. O fluxo é idêntico a um cluster real: Terraform provisiona os recursos, ArgoCD aplica via GitOps e o ingress expõe a aplicação externamente. Detalhes e argumentos completos no [registro de decisões](docs/decisoes/escopo-decisoes.md#ambiente-kind-local-em-vez-de-cloud-eksgke).
 
 ---
 
@@ -159,9 +160,9 @@ Portas expostas pelo Kind no host: 80 / 443 (ingress) e 8080 (ArgoCD).
 
 ## Registro de decisões
 
-Ver [docs/decisoes/escopo-decisoes.md](docs/decisoes/escopo-decisoes.md) — inclui o argumento da escolha do ambiente Kind local, a pipeline simplificada, o que foi descartado e as ferramentas de apoio ao desenvolvimento.
+Ver [docs/decisoes/escopo-decisoes.md](docs/decisoes/escopo-decisoes.md) — registro das escolhas técnicas, desafios encontrados e o que foi descartado.
 
-> **Ferramentas de apoio:** este projeto foi desenvolvido com apoio de IA via **DeepSeek Harness (DSH)** como ambiente de agente e **Omniroute** ([github.com/diegosouzapw/OmniRoute](https://github.com/diegosouzapw/OmniRoute)) como gateway de IA (tokens gratuitos / modelos free) — uso liberado pelo desafio (PDF, seção 3). Detalhes em [docs/decisoes/escopo-decisoes.md](docs/decisoes/escopo-decisoes.md#ferramentas-de-apoio-ao-desenvolvimento-e-por-que).
+**Ferramentas de apoio:** este projeto foi desenvolvido com DeepSeek Harness (DSH) como ambiente de agente e Omniroute ([github.com/diegosouzapw/OmniRoute](https://github.com/diegosouzapw/OmniRoute)) como gateway de IA. Detalhes em [docs/decisoes](docs/decisoes/escopo-decisoes.md#ferramentas-de-apoio-ao-desenvolvimento-e-por-que).
 
 ---
 

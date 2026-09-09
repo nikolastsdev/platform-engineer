@@ -1,70 +1,69 @@
-# Registro de Decisões — Platform Engineer Challenge
+# Registro de Decisões
 
-## Escopo
-- Foco exclusivo nos requisitos R1–R5 (PDF seção 6–7): provisionamento por código, deploy automatizado, acesso externo, escalabilidade/resiliência, documentação.
-- Não expandido: nenhuma nova ferramenta além do que já existia (terraform, kind, helm, argocd). Não foram adicionados CI extra, observabilidade, nem alteração de código da app (PDF seção 5: não obrigatório).
-- Referência: "Ir além deles é opcional, e não ir também é uma decisão válida. Nossa sugestão é priorizar os requisitos antes de ampliar o escopo." (PDF seção 7).
+## Escopo do projeto
+
+Este documento registra as escolhas técnicas, os desafios encontrados e o que foi descartado durante a implementação da plataforma Kubernetes local com GitOps.
 
 ---
 
 ## Ambiente: Kind (local) em vez de cloud (EKS/GKE)
 
-**Decisão:** Rodar o cluster Kubernetes localmente com Kind.
+**Decisão:** cluster Kubernetes local com Kind.
 
-**Argumento:**
-- Não há disponibilidade de utilizar serviço de cloud devido a burocracias de billing / cadastramento de conta de faturamento.
-- Por isso, optei por construir um laboratório local de Kubernetes, usando a ferramenta Kind — recomendada pela própria documentação oficial do Kubernetes para rodar ambientes locais ([https://kind.sigs.k8s.io/](https://kind.sigs.k8s.io/)).
-- Não estamos utilizando múltiplos ambientes (dev/staging/prod); o escopo é apenas local.
-- A pipeline foi simplificada para focar nos requisitos (R1–R5), sem adicionar camadas de complexidade desnecessárias.
-- O conceito GitOps é mantido: o Git continua sendo a fonte de verdade (Helm chart e manifests no repositório). A infraestrutura, entretanto, é provisionada via CLI local (`make create` / `terraform apply`), já que o ambiente é local. Se fosse cloud, a infraestrutura seria provisionada por uma pipeline automatizada (ex.: Terraform Cloud, GitHub Actions com provider AWS). Como é local, a escolha foi CLI para manter a simplicidade alinhada ao escopo.
+**Justificativa:**
+- Limitações de billing em cloud impedem o uso de EKS/GKE neste momento.
+- Kind é recomendado pela documentação oficial do Kubernetes para ambientes locais ([kind.sigs.k8s.io](https://kind.sigs.k8s.io/)).
+- Ambiente único (local), sem necessidade de múltiplos clusters (dev/staging/prod).
+- Pipeline simplificada para um único ambiente.
+- O conceito GitOps é mantido: o Git continua sendo a fonte de verdade (Helm chart no repositório). A infraestrutura é provisionada via CLI local (`make create` / `terraform apply`). Em ambiente cloud, seria automatizada via Terraform Cloud ou GitHub Actions com provider cloud.
 
 ---
 
 ## Pipeline simplificada (CI)
 
-**Decisão:** Pipeline única (`.github/workflows/ci.yaml`) em 4 jobs — `test` → `build` → `scan` → `deploy`.
+**Decisão:** pipeline única (`.github/workflows/ci.yaml`) em 4 jobs — `test` → `build` → `scan` → `deploy`.
 
-**Argumento:**
-- Não havia necessidade de pipelines separadas (build, scan, deploy) dado o escopo de um único ambiente local.
-- A abordagem GitOps é mantida: o deploy é feito via ArgoCD a partir do Helm chart no repo (mono-repo). O job `deploy` do CI atualiza o `values.yaml` do Helm com a nova imagem, e ArgoCD sincroniza automaticamente.
-- Se fosse um ambiente de cloud com múltiplos clusters, a pipeline seria mais complexa (Terraform Cloud para infra, GitHub Actions para build/scan, ArgoCD multi-cluster para deploy). A simplificada aqui reflete o ambiente local (único).
+**Justificativa:**
+- Ambiente único (local), sem necessidade de pipelines separadas por ambiente.
+- O deploy é via ArgoCD (GitOps): o job `deploy` atualiza o `values.yaml` com a nova imagem e ArgoCD sincroniza automaticamente.
+- Em ambiente cloud com múltiplos clusters, seria necessário Terraform Cloud para infra, GitHub Actions para build/scan e ArgoCD multi-cluster para deploy.
 
 ---
 
-## Desafios encontrados (relato — PDF seção 8, item 3)
+## Desafios encontrados
 
 ### 1. Provider `tehcyx/kind` (v0.11.0) crashava ao provisionar
-- **Problema:** `terraform apply` quebrava com `Error: The terraform-provider-kind plugin crashed!` ao criar o cluster (config v0.11.0 desatualizada; `extra_port_mappings` vazio no node control-plane era gatilho de panic).
-- **Correção escolhida:** substituir o resource `kind_cluster` do provider de terceiros por `null_resource` + `local-exec` rodando `kind create cluster --config kind-config.yaml` (CLI oficial, idempotente, 100% por código). O cluster continua sendo provisionado por código (R1 intacto) — mudou apenas **como** o Terraform executa o `kind`.
-- **O que descartei:** manter o provider antigo (instável) e usar kind v1 em cloud (não há cloud disponível — ver decisão acima).
+
+- **Problema:** `terraform apply` quebrava com `Error: The terraform-provider-kind plugin crashed!` ao criar o cluster.
+- **Correção:** substituir o resource `kind_cluster` do provider de terceiros por `null_resource` + `local-exec` rodando `kind create cluster --config kind-config.yaml`. O cluster continua sendo provisionado por código — mudou apenas como o Terraform executa o `kind`.
+- **Alternativa descartada:** manter o provider antigo (instável) ou migrar para cloud (indisponível).
 
 ### 2. Helm 3.19: `--set controller.nodeSelector...` quebrava o ingress-nginx
-- **Problema:** `helm upgrade --install ingress-nginx` falhava com `json: cannot unmarshal object into Go struct field PodSpec.spec.template.spec.nodeSelector of type string` — o `--set` com chave pontuada (`node-role.kubernetes.io/control-plane`) era interpretado como string no Helm 3.19.
-- **Correção escolhida:** usar `--set-json 'controller.nodeSelector={...}'` (sintaxe explícita de JSON), que o Helm 3.19 trata corretamente.
 
-### 3. Cache do Helm bloqueado pelo sandbox de arquivos local
-- **Problema:** ao rodar localmente, o Helm não conseguia gravar em `~/.cache/helm/repository` (`permission denied`), abortando `helm repo add/upgrade`.
-- **Correção escolhida:** na execução local, direcionar o cache para `/tmp` via `HELM_CACHE_HOME`/`HELM_CONFIG_HOME`/`HELM_DATA_HOME` (Helm 3.16+ usa XDG). Nenhuma mudança de arquitetura — é configuração de ambiente de execução.
+- **Problema:** `helm upgrade --install ingress-nginx` falhava com `json: cannot unmarshal object` — o `--set` com chave pontuada era interpretado como string.
+- **Correção:** usar `--set-json 'controller.nodeSelector={...}'` (sintaxe explícita de JSON).
 
-### 4. Transientes de readiness da app (CrashLoopBackOff inicial)
-- **Problema:** o primeiro pod da app entrou em `CrashLoopBackOff` por segundos até o Postgres estar pronto (race de bootstrap).
-- **Observação:** estabilizou sozinho (app e db `Running`); não exigiu mudança de código. Ficou registrado como comportamento esperado de cold-start, mitigado por probes/PDB.
+### 3. Cache do Helm bloqueado pelo sandbox de arquivos
 
----
+- **Problema:** Helm não conseguia gravar em `~/.cache/helm/repository` (`permission denied`).
+- **Correção:** direcionar o cache para `/tmp` via `HELM_CACHE_HOME`/`HELM_CONFIG_HOME`/`HELM_DATA_HOME` (Helm 3.16+ usa XDG).
 
-## Ferramentas de apoio ao desenvolvimento (e por que)
+### 4. Race condition no cold-start (CrashLoopBackOff)
 
-**Decisão:** usamos **DeepSeek Harness (DSH)** como ambiente de agente de IA e **Omniroute** como gateway de IA, com o objetivo de obter tokens gratuitos e usar modelos de IA *free* durante o desenvolvimento destas decisões e da implementação.
-
-**Argumento:**
-- O desafio libera o uso de IA sem estigma (PDF seção 3: "Uso de IA: Liberado e sem estigma. O que esperamos é que você consiga explicar as decisões do código").
-- Omniroute como gateway permite rotear chamadas para modelos gratuitos, eliminando custo de tokens no desenvolvimento.
-- O DeepSeek Harness foi o ambiente (orquestração de agente/CLI) usado para executar e documentar o fluxo.
-- Todo o código gerado/validado com apoio de IA passa pelos mesmos critérios dos requisitos (R1–R5); a IA é ferramenta de apoio, não decisora — as escolhas técnicas estão registradas neste documento.
+- **Problema:** o primeiro pod da app entrou em `CrashLoopBackOff` até o Postgres estar pronto.
+- **Observação:** estabilizou sozinho (app e db `Running`). Comportamento esperado de cold-start, mitigado por probes/PDB.
 
 ---
 
-## Melhorias futuras (com mais tempo de projeto)
+## Ferramentas de apoio ao desenvolvimento
+
+**Ferramentas:** DeepSeek Harness (DSH) como ambiente de agente e Omniroute como gateway de IA (tokens gratuitos / modelos free).
+
+**Por que:** o projeto libera o uso de IA (PDF seção 3: "Uso de IA: Liberado e sem estigma"). Omniroute permite rotear chamadas para modelos gratuitos, eliminando custo de tokens. Todo o código gerado com apoio de IA passa pelos mesmos critérios dos requisitos — a IA é ferramenta de apoio, não decisora.
+
+---
+
+## Melhorias futuras
 
 ### ArgoCD Image Updater
 
