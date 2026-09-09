@@ -68,6 +68,21 @@ tests:
           path: spec.type
           value: NodePort
 
+  - it: should wait for postgresql with an initContainer before app startup
+    template: deployment.yaml
+    asserts:
+      - exists:
+          path: spec.template.spec.initContainers
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: wait-for-db
+      - contains:
+          path: spec.template.spec.initContainers[0].command
+          content: sh
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: pg_isready
+
   - it: should render Service as ClusterIP when configured
     template: service.yaml
     set:
@@ -164,6 +179,8 @@ tests:
 
   - it: should render CronJob when enabled
     template: cronjob.yaml
+    set:
+      cleanupCronjob.enabled: true
     asserts:
       - isKind:
           of: CronJob

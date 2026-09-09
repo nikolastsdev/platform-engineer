@@ -20,6 +20,10 @@ spec:
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ include "todolist-app.serviceAccountName" . }}
+      initContainers:
+        - name: wait-for-db
+          image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          command: ['sh', '-c', 'until pg_isready -h {{ .Values.env.DB_HOST }} -p {{ .Values.env.DB_PORT }} -U {{ .Values.postgresql.user }}; do echo "waiting for postgresql"; sleep 2; done;']
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
