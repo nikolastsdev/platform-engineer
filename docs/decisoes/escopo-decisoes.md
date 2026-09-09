@@ -52,6 +52,7 @@ Este documento registra as escolhas técnicas, os desafios encontrados e o que f
 
 - **Problema:** o primeiro pod da app entrou em `CrashLoopBackOff` até o Postgres estar pronto.
 - **Observação:** estabilizou sozinho (app e db `Running`). Comportamento esperado de cold-start, mitigado por probes/PDB.
+- **Health check:** o endpoint `/healthz` da app (`SELECT 1` no PostgreSQL) é usado pelas liveness, readiness e startup probes do deployment, com o `startupProbe` (tolerante a ~2,5 min) absorvendo a janela de cold-start.
 
 ---
 

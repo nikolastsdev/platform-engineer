@@ -153,7 +153,7 @@ Portas expostas pelo Kind no host: 80 / 443 (ingress) e 8080 (ArgoCD).
 - **HPA (HorizontalPodAutoscaler):** escala o número de réplicas com base na utilização de CPU/memória (`hpa.yaml`)
 - **PDB (PodDisruptionBudget):** garante disponibilidade mínima durante manutenções/drenagens (`pdb.yaml`)
 - **Réplicas parametrizáveis:** configuração via `values.yaml` (`replicaCount`)
-- **Healthchecks:** readiness/liveness probes no `deployment.yaml`
+- **Healthchecks:** liveness, readiness e startup probes apontam para `/healthz` da app, que valida a conexão com o PostgreSQL (`SELECT 1`) — `deployment.yaml` + `app.py`
 - **PostgreSQL:** deployado como deployment + service + secret no mesmo chart (`postgresql.yaml`)
 
 ---
