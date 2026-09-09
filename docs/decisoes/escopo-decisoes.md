@@ -64,6 +64,30 @@
 
 ---
 
+## Melhorias futuras (com mais tempo de projeto)
+
+### ArgoCD Image Updater
+
+**O que é:** componente oficial do ArgoCD que vigia um registry (ex.: GHCR) e atualiza automaticamente a tag da imagem no `values.yaml` do Helm — sem precisar de script de CI.
+
+**Por que não implementamos agora:** o escopo é local (Kind), single-environment, e o `promote-image.py` já resolve o mesmo problema com zero peças extras no cluster. O Image Updater adiciona um deployment no `argocd`, mais um secret de registry, mais um secret de git (para write-back), e mais uma camada de observabilidade — complexidade desnecessária no Kind para um desafio de 7 dias.
+
+**O que muda (se implementado):**
+- CI passa a ser só `test` + `build` (sem job `deploy`).
+- O `promote-image.py` é removido.
+- ArgoCD Application ganha annotations (`argocd-image-updater.argocd.io/image-list`, `write-back-method`, `helm.image-name`, etc.).
+- O updater commita automaticamente a nova tag no repo (write-back git); ArgoCD re-sincroniza.
+
+**Referências:**
+- ArgoCD Image Updater Docs: https://argocd-image-updater.readthedocs.io/
+- ArgoCD Image Updater Helm Chart (argo-helm): https://github.com/argoproj/argo-helm/tree/master/charts/argocd-image-updater
+
+### CI com paths filter
+
+**O que é:** restringir o workflow do CI para rodar `build`/`deploy` só quando muda `app/**` ou `k8s/**` (evita builds desnecessários por mudanças em README ou docs).
+
+---
+
 ## Referências
 - Kubernetes Docs — Local Clusters: [https://kind.sigs.k8s.io/](https://kind.sigs.k8s.io/)
 - ArgoCD Docs: [https://argo-cd.readthedocs.io/](https://argo-cd.readthedocs.io/)
