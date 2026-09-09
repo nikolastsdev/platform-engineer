@@ -111,6 +111,8 @@ O `make create` executa `terraform init + apply` e provisiona cluster, ingress-n
 │   ├── arquitetura/               # Diagrama da arquitetura (arquitetura.html + .json + imagem PNG)
 │   ├── decisoes/
 │   │   └── escopo-decisoes.md     # Registro de decisões (argumentos, o que descartou)
+│   ├── apresentacao/
+│   │   └── roteiro-apresentacao.md  # Roteiro para apresentar o projeto (glossário + Q&A)
 │   └── evidencias/                # Evidências reais de execução
 ├── scripts/promote-image.py      # CI: promove a tag da imagem no values.yaml
 ├── Makefile                       # create / destroy / clean
