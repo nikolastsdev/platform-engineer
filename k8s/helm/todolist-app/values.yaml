@@ -44,7 +44,7 @@ image:
   # -- Image repository
   repository: ghcr.io/nikolastsdev/platform-engineer/todolist
   # -- Image tag (defaults to Chart.AppVersion)
-  tag: a6377cbce6904b07ac930ed62de099d1c0fde87f
+  tag: 404afed623fa445ab7c41623e0b63cd31f6cec28
   # -- Image pull policy
   pullPolicy: Always
   # -- Image pull secrets
