@@ -2,7 +2,7 @@ SHELL := /bin/bash
 TERRAFORM := terraform
 TF_DIR := terraform
 CLUSTER_NAME ?= todolist-platform
-KUBECONFIG := /tmp/kube-kind/kind-$(CLUSTER_NAME).conf
+KUBECONFIG := $(HOME)/.kube/kind-$(CLUSTER_NAME).conf
 
 .PHONY: help init plan create destroy reset clean argocd-password
 

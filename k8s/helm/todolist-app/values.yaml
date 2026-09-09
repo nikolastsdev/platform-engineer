@@ -12,8 +12,8 @@ namespace:
   create: true
   # -- Application namespace
   name: todolist
-  # -- Database namespace
-  databaseName: todolist-db
+  # -- Database namespace (mantido no mesmo namespace da app)
+  databaseName: todolist
 
 postgresql:
   # -- Enable PostgreSQL database
@@ -184,7 +184,7 @@ env:
   APP_COLOR: "blue"
   APP_PORT: "5000"
   LOG_LEVEL: "info"
-  DB_HOST: "postgresql.todolist-db.svc.cluster.local"
+  DB_HOST: "postgresql.todolist.svc.cluster.local"
   DB_PORT: "5432"
   DB_NAME: "todolist"
 

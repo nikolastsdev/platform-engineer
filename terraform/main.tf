@@ -10,7 +10,7 @@
 # ==============================================================================
 
 locals {
-  kubeconfig = pathexpand("/tmp/kube-kind/kind-${var.cluster_name}.conf")
+  kubeconfig = pathexpand("$HOME/.kube/kind-${var.cluster_name}.conf")
 }
 
 # ------------------------------------------------------------------------------
@@ -129,7 +129,6 @@ resource "null_resource" "create_namespaces" {
       echo "==> Criando namespaces..."
       kubectl create namespace todolist --dry-run=client -o yaml | kubectl apply -f -
       kubectl label namespace todolist app=todolist managed=terraform --overwrite
-      kubectl create namespace todolist-db --dry-run=client -o yaml | kubectl apply -f -
       # Cria imagePullSecret ghcr-pull para baixar imagem do GHCR
       # Usa python para gerar o .dockerconfigjson (evita erro de JSON vazio)
       PAT=""
